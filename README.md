@@ -1,6 +1,8 @@
 # Quadratic congruence equation solver
 
-To be added.
+Instructions to be added.
+
+Complete for odd primes n, composite case to be finished soon.
 
 ## Build ##
 
