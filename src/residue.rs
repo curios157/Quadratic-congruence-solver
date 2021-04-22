@@ -100,24 +100,24 @@ mod tests {
     fn test_quadratic_residue_small()
     {
         let res = quadratic_residue_ts(1, 3);
-        assert!(res.0 == 1);
-        assert!(res.1 == 1);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 1);
     }
 
     #[test]
     fn test_quadratic_residue_small_second()
     {
         let res = quadratic_residue_ts(5, 41);
-        assert!(res.0 == 1);
-        assert!(res.1 == 28);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 28);
     }
 
     #[test]
     fn test_quadratic_residue_small_third()
     {
         let res = quadratic_residue_ts(99, 139);
-        assert!(res.0 == 1);
-        assert!(res.1 == 51);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 51);
     }
 
     #[test]
@@ -131,24 +131,24 @@ mod tests {
     fn test_quadratic_residue_mid()
     {
         let res = quadratic_residue_ts(999, 14867);
-        assert!(res.0 == 1);
-        assert!(res.1 == 11699);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 11699);
     }
 
     #[test]
     fn test_quadratic_residue_mid_second()
     {
         let res = quadratic_residue_ts(899, 50261);
-        assert!(res.0 == 1);
-        assert!(res.1 == 14696);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 14696);
     }
 
     #[test]
     fn test_quadratic_residue_mid_third()
     {
         let res = quadratic_residue_ts(85155012, 65537);
-        assert!(res.0 == 1);
-        assert!(res.1 == 4688);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 4688);
     }
 
     #[test]
@@ -162,24 +162,24 @@ mod tests {
     fn test_quadratic_residue_large()
     {
         let res = quadratic_residue_ts(100000, 50000038603);
-        assert!(res.0 == 1);
-        assert!(res.1 == 38257918326);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 38257918326);
     }
 
     #[test]
     fn test_quadratic_residue_large_second()
     {
         let res = quadratic_residue_ts(999999999999, 9223372036854775337);
-        assert!(res.0 == 1);
-        assert!(res.1 == 5413383852200147669);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 5413383852200147669);
     }
 
     #[test]
     fn test_quadratic_residue_large_third()
     {
         let res = quadratic_residue_ts(9999999999999999, 9223372036854775783);
-        assert!(res.0 == 1);
-        assert!(res.1 == 8935381242731254940);
+        assert_eq!(res.0, 1);
+        assert_eq!(res.1, 8935381242731254940);
     }
 
     #[test]

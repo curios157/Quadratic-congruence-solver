@@ -240,7 +240,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -255,7 +255,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -270,7 +270,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -285,7 +285,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -300,7 +300,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -315,7 +315,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -330,7 +330,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -345,7 +345,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }
@@ -360,7 +360,7 @@ mod tests {
         let mut i = 0;
 
         for f in &factors {
-            assert!(*f == c_factors[i]);
+            assert_eq!(*f, c_factors[i]);
             i += 1;
         }
     }

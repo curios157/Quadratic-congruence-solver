@@ -107,7 +107,7 @@ impl Equation {
             let num: i64 = match (*arg).parse() {
                 Ok(x) => {
                     if i + 1 == args.len() - 1 {
-                        if x <= 2 {return Err("n must be larger than 2");}
+                        if x <= 1 {return Err("n must be larger than 1");}
                         if x > MAX_COEF_VAL {
                             println!("warning: n must be smaller than {}", MAX_COEF_VAL);
                             return Err("argument n not within bounds");

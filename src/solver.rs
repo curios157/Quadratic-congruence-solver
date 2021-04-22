@@ -92,7 +92,7 @@ pub fn solve_quadratic(mut coefs: &mut Coefs) -> Vec<i64>
     while coefs.a < 0 {coefs.a += coefs.n;}
     while coefs.b < 0 {coefs.b += coefs.n;}
 
-    if prime::is_prime(coefs.n) {
+    if prime::is_prime(coefs.n) && coefs.n > 2 {
         // (2ax + b)^2 = b^2 + 4ad (mod n), n>2
         let x_l = euclid::mod_mult_i64(coefs.b, coefs.b, coefs.n);
         let x_r = euclid::mod_mult_i64(4i64, euclid::mod_mult_i64(coefs.a, coefs.d, coefs.n), coefs.n);
@@ -121,12 +121,15 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
     let n_orig = coefs.n;
     let mut sols: Vec<(i64, i64)> = Vec::new();
 
+    let mut diff_factor_count = 0;
+
     for (f, c) in &factor_map {
         coefs.n = (*f).try_into().unwrap();
         let c_u32: u32 = (*c).try_into().unwrap(); // c < 64
         let modulo = i64::pow(coefs.n, c_u32);
 
         let vec_error: Vec<i64> = vec![-1]; // return on error
+        diff_factor_count += 1;
 
         if coefs.n == 2 {
             if coefs.b == 0 {
@@ -161,7 +164,17 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
     }
     coefs.n = n_orig;
 
-    euclid::crt(sols, coefs.n)
+    let x: Vec<i64> = if diff_factor_count > 1 {
+        euclid::crt(sols, coefs.n)
+    } else {
+        let mut x_t: Vec<i64> = Vec::new();
+        for j in 0..sols.len() {
+            x_t.push(sols[j].0);
+        }
+        x_t
+    };
+
+    x
 }
     
 
@@ -211,39 +224,75 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
 
 fn quadratic_residue_mod_pow_of_two(coefs: &Coefs, c: u32) -> Vec<i64>
 {
-    // x^2 = d (mod 2^c)
     let mut x: Vec<i64> = Vec::new();
-
-    if coefs.a & 1 == 0 {
-        return x; // no solution
-    }
+    let n = i64::pow(coefs.n, c);
 
     match c {
         1 => {
-            if coefs.d & 1 != 0 {x.push(1);}
-            else {x.push(0);}
+            if coefs.a & 1 != 0 {
+                if coefs.d & 1 != 0 {
+                    x.push(1);
+                } else {
+                    x.push(0);
+                }
+            }
         },
         2 => {
-            if coefs.d & 1 != 0 {
-                x.push(1);
-                x.push(3);
+            if coefs.d & 1 == 0 {
+                // d even
+                if coefs.a & 1 == 0 {
+                    if coefs.a % 4 != 0 {
+                        if coefs.d % 4 == 0 {
+                            x.push(0);
+                            x.push(2);
+                        } else {
+                            x.push(1);
+                            x.push(3);
+                        }
+                    } else {
+                        if coefs.d % 4 == 0 {
+                            x.push(0);
+                            x.push(1);
+                            x.push(2);
+                            x.push(3);
+                        }
+                    }    
+                } else {
+                    if coefs.d % 4 == 0 {
+                        x.push(0);
+                        x.push(2);
+                    }
+                }
+            } else {
+                if euclid::gcd(n, coefs.a) == 1 {
+                    let inv = euclid::multip_inverse(coefs.a, n);
+                    let d = euclid::mod_mult_i64(inv, coefs.d, n);
+                    if d % 4 == 1 {
+                        x.push(1);
+                        x.push(3);
+                    }
+                }
             }
-            else {x.push(0);}
         },
         _ => {
-            if coefs.d % 8 == 1 && c > 0 {
-                let pow: Vec<i64> = vec![1, 3];
+            if euclid::gcd(n, coefs.a) == 1 {
+                let inv = euclid::multip_inverse(coefs.a, n);
+                let d = euclid::mod_mult_i64(inv, coefs.d, n);
 
-                for i in pow.into_iter() {
-                    let mut s = i;
-
-                    for j in 3..c {
-                        let t = i64::pow(2, j);
-                        let r = (s * s - (coefs.d % t)) / t;
-                        s = s + (r % 2) * (t / 2);
+                if d % 8 == 1 {
+                    let sols: Vec<i64> = vec![1, 3];
+    
+                    for i in sols.into_iter() {
+                        let mut s = i;
+    
+                        for j in 3..c {
+                            let t = i64::pow(2, j);
+                            let r = i64::abs(euclid::mod_mult_i64(s, s, n) - d) / t;
+                            s = euclid::mod_sum_i64(s, (r % 2) * (t / 2), n);
+                        }
+                        x.push(s);
+                        x.push(n - s);
                     }
-                    x.push(s);
-                    x.push(i64::pow(2, c) - s);
                 }
             }
         },
@@ -256,11 +305,14 @@ fn quadratic_mod_pow_of_two(coefs: &Coefs) -> Vec<i64>
 {
     let mut sols: Vec<i64> = Vec::new();
 
-    if coefs.a % 2 != 0 && coefs.b % 2 != 0 {
-        if coefs.d % 2 != 0 {
-            return sols; // d odd, no solution
+    if coefs.d % 2 != 0 {
+        if coefs.a % 2 != 0 && coefs.b % 2 != 0 {
+            return sols;
         }
-    }
+        if coefs.a % 2 == 0 && coefs.b % 2 == 0 {
+            return sols;
+        }
+    } 
 
     let s_cand: Vec<i64> = vec![0, 1];
 
@@ -332,8 +384,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 4);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 4);
     }
 
     #[test]
@@ -363,8 +415,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 26);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 26);
     }
 
     #[test]
@@ -379,8 +431,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 26);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 26);
     }
 
     #[test]
@@ -395,8 +447,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 1349);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 1349);
     }
 
     #[test]
@@ -411,8 +463,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 345);
-        assert!(res.1 == 183);
+        assert_eq!(res.0, 345);
+        assert_eq!(res.1, 183);
     }
 
     #[test]
@@ -427,8 +479,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 21);
-        assert!(res.1 == 15);
+        assert_eq!(res.0, 21);
+        assert_eq!(res.1, 15);
     }
 
     #[test]
@@ -443,8 +495,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 1395);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 1395);
     }
 
     #[test]
@@ -474,8 +526,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 44363860600404);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 44363860600404);
     }
 
     #[test]
@@ -490,8 +542,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 9211610741125925778);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 9211610741125925778);
     }
 
     #[test]
@@ -506,8 +558,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 111);
-        assert!(res.1 == 19);
+        assert_eq!(res.0, 111);
+        assert_eq!(res.1, 19);
     }
 
     #[test]
@@ -522,8 +574,8 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 4611686018427387891);
-        assert!(res.1 == 4599924722698537886);
+        assert_eq!(res.0, 4611686018427387891);
+        assert_eq!(res.1, 4599924722698537886);
     }
 
     #[test]
@@ -538,8 +590,44 @@ mod tests {
         };
         let res = solve_linear(&mut coefs);
 
-        assert!(res.0 == 0);
-        assert!(res.1 == 5344334800772456633);
+        assert_eq!(res.0, 0);
+        assert_eq!(res.1, 5344334800772456633);
+    }
+
+    #[test]
+    fn test_quadratic_solver_small_prime_modulus()
+    {
+        let mut coefs = Coefs {
+            a: 3,
+            b: 6,
+            c: 1,
+            d: 0,
+            n: 19,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&7));
+        assert!(res.contains(&10));
+    }
+
+    #[test]
+    fn test_quadratic_solver_small_prime_modulus_second()
+    {
+        let mut coefs = Coefs {
+            a: 3,
+            b: 6,
+            c: 0,
+            d: 18,
+            n: 19,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&7));
+        assert!(res.contains(&10));
     }
 
     #[test]
@@ -555,7 +643,7 @@ mod tests {
         let res = solve_quadratic(&mut coefs);
 
         assert!(res.len() == 1);
-        assert!(res[0] == 1);
+        assert_eq!(res[0], 1);
     }
 
     #[test]
@@ -643,7 +731,7 @@ mod tests {
         let res = solve_quadratic(&mut coefs);
 
         assert!(res.len() == 1);
-        assert!(res[0] == 2);
+        assert_eq!(res[0], 2);
     }
 
     #[test]
@@ -761,6 +849,292 @@ mod tests {
         let res = solve_quadratic(&mut coefs);
         assert!(res.len() == 1);
         assert!(res[0] == -1);
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_two()
+    {
+        let mut coefs = Coefs {
+            a: 5,
+            b: 1,
+            c: 8,
+            d: 0,
+            n: 2,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&0));
+        assert!(res.contains(&1));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_two_second()
+    {
+        let mut coefs = Coefs {
+            a: 1,
+            b: 1,
+            c: 4,
+            d: 0,
+            n: 2,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&0));
+        assert!(res.contains(&1));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_two_third()
+    {
+        let mut coefs = Coefs {
+            a: 1,
+            b: 0,
+            c: 3,
+            d: 0,
+            n: 2,
+        };
+        let res = solve_quadratic(&mut coefs);
+        assert!(res.len() == 1);
+        assert_eq!(res[0], 1);
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_two_no_solution()
+    {
+        let mut coefs = Coefs {
+            a: 1,
+            b: 1,
+            c: 1,
+            d: 0,
+            n: 2,
+        };
+        let res = solve_quadratic(&mut coefs);
+        assert!(res.len() == 1);
+        assert!(res[0] == -1);
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_two_no_solution_second()
+    {
+        let mut coefs = Coefs {
+            a: 8,
+            b: 0,
+            c: 3,
+            d: 0,
+            n: 2,
+        };
+        let res = solve_quadratic(&mut coefs);
+        assert!(res.len() == 1);
+        assert!(res[0] == -1);
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two()
+    {
+        let mut coefs = Coefs {
+            a: 7,
+            b: 0,
+            c: 1,
+            d: 0,
+            n: 4,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&1));
+        assert!(res.contains(&3));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_second()
+    {
+        let mut coefs = Coefs {
+            a: 1,
+            b: 0,
+            c: 31,
+            d: 0,
+            n: 4,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&1));
+        assert!(res.contains(&3));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_third()
+    {
+        let mut coefs = Coefs {
+            a: 3,
+            b: 0,
+            c: 29,
+            d: 0,
+            n: 4,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&1));
+        assert!(res.contains(&3));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_fourth()
+    {
+        let mut coefs = Coefs {
+            a: 8,
+            b: 0,
+            c: 12,
+            d: 0,
+            n: 4,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 4);
+        assert!(res.contains(&0));
+        assert!(res.contains(&1));
+        assert!(res.contains(&2));
+        assert!(res.contains(&3));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_fifth()
+    {
+        let mut coefs = Coefs {
+            a: 6,
+            b: 0,
+            c: 12,
+            d: 0,
+            n: 4,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&0));
+        assert!(res.contains(&2));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_sixth()
+    {
+        let mut coefs = Coefs {
+            a: 6,
+            b: 0,
+            c: 10,
+            d: 0,
+            n: 4,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 2);
+        assert!(res.contains(&1));
+        assert!(res.contains(&3));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_seventh()
+    {
+        let mut coefs = Coefs {
+            a: 7,
+            b: 0,
+            c: 1,
+            d: 0,
+            n: 4096,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.len() == 4);
+        assert!(res.contains(&611));
+        assert!(res.contains(&1437));
+        assert!(res.contains(&2659));
+        assert!(res.contains(&3485));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_eigth()
+    {
+        let mut coefs = Coefs {
+            a: 1,
+            b: 0,
+            c: 15,
+            d: 0,
+            n: 4294967296,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        let correct_res: Vec<i64> = vec![
+            34716455,
+            2112767193,
+            2182200103,
+            4260250841,
+        ];
+
+        for r in &correct_res {
+            assert!(res.contains(&*r));
+        }
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_ninth()
+    {
+        let mut coefs = Coefs {
+            a: 1,
+            b: 0,
+            c: 25151551,
+            d: 0,
+            n: 4611686018427387904,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        let correct_res: Vec<i64> = vec![
+            949829031310219745,
+            1356013977903474207,
+            3255672040523913697,
+            3661856987117168159,
+        ];
+
+        for r in &correct_res {
+            assert!(res.contains(&*r));
+        }
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_tenth()
+    {
+        let mut coefs = Coefs {
+            a: 999999999999999999,
+            b: 0,
+            c: 1,
+            d: 0,
+            n: 4611686018427387904,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        let correct_res: Vec<i64> = vec![
+            567654762933256193,
+            1738188246280437759,
+            2873497772146950145,
+            4044031255494131711,
+        ];
+
+        for r in &correct_res {
+            assert!(res.contains(&*r));
+        }
     }
 
 }
