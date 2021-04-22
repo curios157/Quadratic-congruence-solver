@@ -47,12 +47,29 @@ pub fn solve_equation(equation: Equation)
 }
 
 
+fn add_until_nonnegative(x: i64, m: i64) -> i64
+{
+    // find smallest k : km >= x, for x < 0
+    let abs_x = i64::abs(x);
+    if abs_x <= m {
+        return x + m;
+    }
+
+    let mut k = abs_x / m;
+    if abs_x % m > 0 {
+        k += 1;
+    }
+
+    k * m - abs_x
+}
+
+
 pub fn solve_linear(coefs: &mut Coefs) -> (i64, i64)
 {
     // bx + c = d (mod n)
     coefs.d -= coefs.c;
-    while coefs.d < 0 {coefs.d += coefs.n;}
-    while coefs.b < 0 {coefs.b += coefs.n;}
+    if coefs.b < 0 {coefs.b = add_until_nonnegative(coefs.b, coefs.n);}
+    if coefs.d < 0 {coefs.d = add_until_nonnegative(coefs.d, coefs.n);}
 
     linear_eq(&coefs)
 }
@@ -88,9 +105,10 @@ pub fn solve_quadratic(mut coefs: &mut Coefs) -> Vec<i64>
 {
     // ax^2 + bx + c = d (mod n)
     coefs.d -= coefs.c;
-    while coefs.d < 0 {coefs.d += coefs.n;}
-    while coefs.a < 0 {coefs.a += coefs.n;}
-    while coefs.b < 0 {coefs.b += coefs.n;}
+
+    if coefs.a < 0 {coefs.a = add_until_nonnegative(coefs.a, coefs.n);}
+    if coefs.b < 0 {coefs.b = add_until_nonnegative(coefs.b, coefs.n);}
+    if coefs.d < 0 {coefs.d = add_until_nonnegative(coefs.d, coefs.n);}
 
     if prime::is_prime(coefs.n) && coefs.n > 2 {
         // (2ax + b)^2 = b^2 + 4ad (mod n), n>2
@@ -152,10 +170,10 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
             let rhs = euclid::mod_sum_i64(l, r, coefs.n);
 
             let sub_sols = quadratic_eq(&coefs, rhs);
+
             for j in &sub_sols {
                 if *j == -1 {return vec_error;}
             }
-
             let sub_sols = lift_with_hensels_method(&coefs, sub_sols, c_u32);
             if sub_sols.len() == 0 {return vec_error;}
 
@@ -181,15 +199,15 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
 fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
 {
     let mut sols: Vec<i64> = Vec::new();
-
     // (2ax + b)^2 = z^2 = rhs = b^2 + 4ad (mod n)
     let z = residue::quadratic_residue(rhs, coefs.n);
     if z < 0 {
         sols.push(-1); // rhs not a quadratic residue => no solutions
         return sols;
-    } 
+    }
+
     let mut d = z - coefs.b;
-    while d < 0 {d += coefs.n;}
+    if d < 0 {d = add_until_nonnegative(d, coefs.n);}
 
     let b = euclid::mod_mult_i64(2i64, coefs.a, coefs.n);
 
@@ -200,7 +218,7 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
         d: d,
         n: coefs.n,
     };
-
+    
     let sol = linear_eq(&lin_coefs);
     if sol.0 < 0 {
         sols.push(-1); // no solutions
@@ -210,9 +228,9 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
     if z == 0 {return sols;}
 
     d = -z;
-    while d < 0 {d += coefs.n;}
+    if d < 0 {d = add_until_nonnegative(d, coefs.n);}
     d -= coefs.b;
-    while d < 0 {d += coefs.n;}
+    if d < 0 {d = add_until_nonnegative(d, coefs.n);}
     lin_coefs.d = d;
 
     let sol = linear_eq(&lin_coefs);
@@ -351,13 +369,13 @@ fn lift_with_hensels_method(coefs: &Coefs, sub_sols: Vec<i64>, c: u32) -> Vec<i6
             let bx = euclid::mod_mult_i64(coefs.b, lifted_s, n);
 
             let mut cx = -1 * coefs.d;
-            while cx < 0 {cx += n;}
+            if cx < 0 {cx = add_until_nonnegative(cx, n);}
 
             let func = euclid::mod_sum_i64(euclid::mod_sum_i64(ax, bx, n), cx, n);
             let m = euclid::mod_mult_i64(func, t, n);
 
             lifted_s -= m;
-            while lifted_s < 0 {lifted_s += n;}
+            if lifted_s < 0 {lifted_s = add_until_nonnegative(lifted_s, n);}
         }
         sols.push(lifted_s);
     }
@@ -1136,5 +1154,57 @@ mod tests {
             assert!(res.contains(&*r));
         }
     }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_prime()
+    {
+        let mut coefs = Coefs {
+            a: 1,
+            b: 1,
+            c: 47,
+            d: 0,
+            n: 343,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.contains(&99));
+        assert!(res.contains(&243));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_prime_second()
+    {
+        let mut coefs = Coefs {
+            a: 999999999999999999,
+            b: -999999999912421,
+            c: 214081248358023524,
+            d: 0,
+            n: 2862423051509815793,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.contains(&2303508973012165250));
+        assert!(res.contains(&2721119028450610552));
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_prime_third()
+    {
+        let mut coefs = Coefs {
+            a: -125125121242124,
+            b: -54224212353523,
+            c: 113535124124255,
+            d: 0,
+            n: 4611686014132420609,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.contains(&1523832291260501430));
+        assert!(res.contains(&2424331690299886142));
+    }
+
 
 }
