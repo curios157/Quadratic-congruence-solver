@@ -66,7 +66,6 @@ fn add_until_nonnegative(x: i64, m: i64) -> i64
 
 pub fn solve_linear(coefs: &mut Coefs) -> (i64, i64)
 {
-    // bx + c = d (mod n)
     coefs.d -= coefs.c;
     if coefs.b < 0 {coefs.b = add_until_nonnegative(coefs.b, coefs.n);}
     if coefs.d < 0 {coefs.d = add_until_nonnegative(coefs.d, coefs.n);}
@@ -103,7 +102,6 @@ fn linear_eq(coefs: &Coefs) -> (i64, i64)
 
 pub fn solve_quadratic(mut coefs: &mut Coefs) -> Vec<i64>
 {
-    // ax^2 + bx + c = d (mod n)
     coefs.d -= coefs.c;
 
     if coefs.a < 0 {coefs.a = add_until_nonnegative(coefs.a, coefs.n);}
@@ -146,7 +144,7 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
         let c_u32: u32 = (*c).try_into().unwrap(); // c < 64
         let modulo = i64::pow(coefs.n, c_u32);
 
-        let vec_error: Vec<i64> = vec![-1]; // return on error
+        let vec_error: Vec<i64> = vec![-1];
         diff_factor_count += 1;
 
         if coefs.n == 2 {
@@ -242,80 +240,122 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
 
 fn quadratic_residue_mod_pow_of_two(coefs: &Coefs, c: u32) -> Vec<i64>
 {
-    let mut x: Vec<i64> = Vec::new();
     let n = i64::pow(coefs.n, c);
 
     match c {
         1 => {
-            if coefs.a & 1 != 0 {
-                if coefs.d & 1 != 0 {
-                    x.push(1);
-                } else {
-                    x.push(0);
-                }
-            }
+            quadratic_residue_mod_two(&coefs)
         },
         2 => {
-            if coefs.d & 1 == 0 {
-                // d even
-                if coefs.a & 1 == 0 {
-                    if coefs.a % 4 != 0 {
-                        if coefs.d % 4 == 0 {
-                            x.push(0);
-                            x.push(2);
-                        } else {
-                            x.push(1);
-                            x.push(3);
-                        }
-                    } else {
-                        if coefs.d % 4 == 0 {
-                            x.push(0);
-                            x.push(1);
-                            x.push(2);
-                            x.push(3);
-                        }
-                    }    
-                } else {
-                    if coefs.d % 4 == 0 {
-                        x.push(0);
-                        x.push(2);
-                    }
-                }
+            quadratic_residue_mod_four(&coefs, n)
+        },
+        _ => {
+            if euclid::gcd(n, coefs.a) == 1 {
+                quadratic_residue_mod_higher_power(&coefs, n, c)
             } else {
-                if euclid::gcd(n, coefs.a) == 1 {
-                    let inv = euclid::multip_inverse(coefs.a, n);
-                    let d = euclid::mod_mult_i64(inv, coefs.d, n);
-                    if d % 4 == 1 {
-                        x.push(1);
-                        x.push(3);
+                vec![]
+            }
+        },
+    }
+}
+
+
+fn quadratic_residue_mod_two(coefs: &Coefs) -> Vec<i64>
+{
+    match coefs.d & 1 {
+        0 => {
+            if coefs.a & 1 != 0 {
+                vec![0]
+            } else {
+                vec![0,1]
+            }
+        },
+        _ => {
+            if coefs.a & 1 != 0 {
+                vec![1]
+            } else {
+                vec![]
+            }
+        },
+    }
+}
+
+
+fn quadratic_residue_mod_four(coefs: &Coefs, n: i64) -> Vec<i64>
+{
+    match coefs.d & 1 {
+        0 => {
+            match coefs.a % 4 {
+                0 => {
+                    if coefs.d % 4 == 0 {
+                        vec![0,1,2,3]
+                    } else {
+                        vec![]
                     }
-                }
+                },
+                2 => {
+                    if coefs.d % 4 == 0 {
+                        vec![0,2]
+                    } else {
+                        vec![1,3]
+                    }
+                },
+                _ => {
+                    if coefs.d % 4 == 0 {
+                        vec![0,2]
+                    } else {
+                        vec![]
+                    }
+                },
             }
         },
         _ => {
             if euclid::gcd(n, coefs.a) == 1 {
                 let inv = euclid::multip_inverse(coefs.a, n);
                 let d = euclid::mod_mult_i64(inv, coefs.d, n);
-
-                if d % 8 == 1 {
-                    let sols: Vec<i64> = vec![1, 3];
-    
-                    for i in sols.into_iter() {
-                        let mut s = i;
-    
-                        for j in 3..c {
-                            let t = i64::pow(2, j);
-                            let r = i64::abs(euclid::mod_mult_i64(s, s, n) - d) / t;
-                            s = euclid::mod_sum_i64(s, (r % 2) * (t / 2), n);
-                        }
-                        x.push(s);
-                        x.push(n - s);
-                    }
+                if d % 4 == 1 {
+                    vec![1,3]
+                } else {
+                    vec![]
                 }
+            } else {
+                vec![]
             }
-        },
+        }
     }
-    x
+}
+
+
+fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64>
+{
+    let inv = euclid::multip_inverse(coefs.a, n);
+    let d = euclid::mod_mult_i64(inv, coefs.d, n);
+
+    match d % 8 {
+        1 => {
+            let mut x: Vec<i64> = Vec::new();
+            let sols: Vec<i64> = vec![1, 3];
+            
+            for i in sols.into_iter() {
+                let mut s = i;
+
+                for j in 3..c {
+                    let t = i64::pow(2, j);
+                    let r = i64::abs(euclid::mod_mult_i64(s, s, n) - d) / t;
+                    s = euclid::mod_sum_i64(s, (r % 2) * (t / 2), n);
+                }
+                x.push(s);
+                x.push(n - s);
+            }
+            x
+        },
+        4 => {
+            vec![]
+        },
+        _ => {
+            vec![]
+        }
+    }
 }
 
 
