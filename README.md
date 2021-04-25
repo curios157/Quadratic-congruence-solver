@@ -2,7 +2,9 @@
 
 Instructions to be added.
 
-Complete for odd primes n, composite case to be finished soon.
+To be added:
+- more tests
+- modifications to mod 2^k case
 
 ## Build ##
 
