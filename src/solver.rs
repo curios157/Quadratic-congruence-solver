@@ -1,17 +1,15 @@
-use std::vec::Vec;
 use std::collections::HashMap;
 use std::convert::TryInto;
+use std::vec::Vec;
 
-use crate::Equation;
 use crate::Coefs;
+use crate::Equation;
 
 use crate::euclid;
 use crate::prime;
 use crate::residue;
 
-
-pub fn solve_equation(equation: Equation)
-{
+pub fn solve_equation(equation: Equation) {
     match equation {
         Equation::Linear(mut coefs) => {
             let sol = solve_linear(&mut coefs);
@@ -23,7 +21,7 @@ pub fn solve_equation(equation: Equation)
             } else {
                 println!("All solutions: {} + {}k", sol.1, coefs.n);
             }
-        },
+        }
         Equation::Quad(mut coefs) => {
             let sol = solve_quadratic(&mut coefs);
 
@@ -37,18 +35,16 @@ pub fn solve_equation(equation: Equation)
             if sol_exists {
                 println!("Solutions x in Z/{}Z", coefs.n);
                 for (j, x) in (&sol).iter().enumerate() {
-                    println!("x_{}: {}", j+1, *x);
+                    println!("x_{}: {}", j + 1, *x);
                 }
             } else {
                 println!("There is no solution in Z/{}Z", coefs.n);
             }
-        },
+        }
     }
 }
 
-
-fn add_until_nonnegative(x: i64, m: i64) -> i64
-{
+fn add_until_nonnegative(x: i64, m: i64) -> i64 {
     // find smallest k : km >= x, for x < 0
     let abs_x = i64::abs(x);
     if abs_x <= m {
@@ -63,19 +59,19 @@ fn add_until_nonnegative(x: i64, m: i64) -> i64
     k * m - abs_x
 }
 
-
-pub fn solve_linear(coefs: &mut Coefs) -> (i64, i64)
-{
+pub fn solve_linear(coefs: &mut Coefs) -> (i64, i64) {
     coefs.d -= coefs.c;
-    if coefs.b < 0 {coefs.b = add_until_nonnegative(coefs.b, coefs.n);}
-    if coefs.d < 0 {coefs.d = add_until_nonnegative(coefs.d, coefs.n);}
+    if coefs.b < 0 {
+        coefs.b = add_until_nonnegative(coefs.b, coefs.n);
+    }
+    if coefs.d < 0 {
+        coefs.d = add_until_nonnegative(coefs.d, coefs.n);
+    }
 
     linear_eq(&coefs)
 }
 
-
-fn linear_eq(coefs: &Coefs) -> (i64, i64)
-{
+fn linear_eq(coefs: &Coefs) -> (i64, i64) {
     let gcd_bn: i64 = euclid::gcd(coefs.n, coefs.b);
     let mut sol: (i64, i64) = (0, 0);
 
@@ -86,32 +82,45 @@ fn linear_eq(coefs: &Coefs) -> (i64, i64)
 
     if gcd_bn == 1 {
         sol.1 = {
-            euclid::mod_mult_i64(euclid::multip_inverse(coefs.b, coefs.n), coefs.d, coefs.n) % coefs.n
+            euclid::mod_mult_i64(euclid::multip_inverse(coefs.b, coefs.n), coefs.d, coefs.n)
+                % coefs.n
         };
     } else {
         let n_d = coefs.n / gcd_bn;
 
         sol.1 = {
-            euclid::mod_mult_i64(euclid::multip_inverse(coefs.b/gcd_bn, n_d), coefs.d/gcd_bn, n_d) % n_d
+            euclid::mod_mult_i64(
+                euclid::multip_inverse(coefs.b / gcd_bn, n_d),
+                coefs.d / gcd_bn,
+                n_d,
+            ) % n_d
         };
         sol.0 = n_d;
     }
     sol
 }
 
-
-pub fn solve_quadratic(mut coefs: &mut Coefs) -> Vec<i64>
-{
+pub fn solve_quadratic(mut coefs: &mut Coefs) -> Vec<i64> {
     coefs.d -= coefs.c;
 
-    if coefs.a < 0 {coefs.a = add_until_nonnegative(coefs.a, coefs.n);}
-    if coefs.b < 0 {coefs.b = add_until_nonnegative(coefs.b, coefs.n);}
-    if coefs.d < 0 {coefs.d = add_until_nonnegative(coefs.d, coefs.n);}
+    if coefs.a < 0 {
+        coefs.a = add_until_nonnegative(coefs.a, coefs.n);
+    }
+    if coefs.b < 0 {
+        coefs.b = add_until_nonnegative(coefs.b, coefs.n);
+    }
+    if coefs.d < 0 {
+        coefs.d = add_until_nonnegative(coefs.d, coefs.n);
+    }
 
     if prime::is_prime(coefs.n) && coefs.n > 2 {
         // (2ax + b)^2 = b^2 + 4ad (mod n), n>2
         let x_l = euclid::mod_mult_i64(coefs.b, coefs.b, coefs.n);
-        let x_r = euclid::mod_mult_i64(4i64, euclid::mod_mult_i64(coefs.a, coefs.d, coefs.n), coefs.n);
+        let x_r = euclid::mod_mult_i64(
+            4i64,
+            euclid::mod_mult_i64(coefs.a, coefs.d, coefs.n),
+            coefs.n,
+        );
         let rhs = euclid::mod_sum_i64(x_l, x_r, coefs.n);
 
         return quadratic_eq(&coefs, rhs);
@@ -131,9 +140,7 @@ pub fn solve_quadratic(mut coefs: &mut Coefs) -> Vec<i64>
     quadratic_eq_composite_mod(&mut coefs, factor_map)
 }
 
-
-fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) -> Vec<i64>
-{
+fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) -> Vec<i64> {
     let n_orig = coefs.n;
     let mut sols: Vec<(i64, i64)> = Vec::new();
 
@@ -150,32 +157,52 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
         if coefs.n == 2 {
             if coefs.b == 0 {
                 let s = quadratic_residue_mod_pow_of_two(&coefs, c_u32);
-                if s.len() == 0 {return vec_error;}
+                if s.len() == 0 {
+                    return vec_error;
+                }
 
-                for j in s {sols.push((j, modulo));}
+                for j in s {
+                    sols.push((j, modulo));
+                }
             } else {
                 let sub_sols = quadratic_mod_pow_of_two(&coefs);
-                if sub_sols.len() == 0 {return vec_error;}
+                if sub_sols.len() == 0 {
+                    return vec_error;
+                }
 
                 let s = lift_with_hensels_method(&coefs, sub_sols, c_u32);
-                if s.len() == 0 {return vec_error;}
+                if s.len() == 0 {
+                    return vec_error;
+                }
 
-                for j in s {sols.push((j, modulo));}
+                for j in s {
+                    sols.push((j, modulo));
+                }
             }
         } else {
             let l = euclid::mod_mult_i64(coefs.b, coefs.b, coefs.n);
-            let r = euclid::mod_mult_i64(4i64, euclid::mod_mult_i64(coefs.a, coefs.d, coefs.n), coefs.n);
+            let r = euclid::mod_mult_i64(
+                4i64,
+                euclid::mod_mult_i64(coefs.a, coefs.d, coefs.n),
+                coefs.n,
+            );
             let rhs = euclid::mod_sum_i64(l, r, coefs.n);
 
             let sub_sols = quadratic_eq(&coefs, rhs);
 
             for j in &sub_sols {
-                if *j == -1 {return vec_error;}
+                if *j == -1 {
+                    return vec_error;
+                }
             }
             let sub_sols = lift_with_hensels_method(&coefs, sub_sols, c_u32);
-            if sub_sols.len() == 0 {return vec_error;}
+            if sub_sols.len() == 0 {
+                return vec_error;
+            }
 
-            for j in sub_sols {sols.push((j, modulo));}
+            for j in sub_sols {
+                sols.push((j, modulo));
+            }
         }
     }
     coefs.n = n_orig;
@@ -192,10 +219,8 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
 
     x
 }
-    
 
-fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
-{
+fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64> {
     let mut sols: Vec<i64> = Vec::new();
     // (2ax + b)^2 = z^2 = rhs = b^2 + 4ad (mod n)
     let z = residue::quadratic_residue(rhs, coefs.n);
@@ -205,7 +230,9 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
     }
 
     let mut d = z - coefs.b;
-    if d < 0 {d = add_until_nonnegative(d, coefs.n);}
+    if d < 0 {
+        d = add_until_nonnegative(d, coefs.n);
+    }
 
     let b = euclid::mod_mult_i64(2i64, coefs.a, coefs.n);
 
@@ -216,19 +243,25 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
         d: d,
         n: coefs.n,
     };
-    
+
     let sol = linear_eq(&lin_coefs);
     if sol.0 < 0 {
         sols.push(-1); // no solutions
         return sols;
     }
     sols.push(sol.1);
-    if z == 0 {return sols;}
+    if z == 0 {
+        return sols;
+    }
 
     d = -z;
-    if d < 0 {d = add_until_nonnegative(d, coefs.n);}
+    if d < 0 {
+        d = add_until_nonnegative(d, coefs.n);
+    }
     d -= coefs.b;
-    if d < 0 {d = add_until_nonnegative(d, coefs.n);}
+    if d < 0 {
+        d = add_until_nonnegative(d, coefs.n);
+    }
     lin_coefs.d = d;
 
     let sol = linear_eq(&lin_coefs);
@@ -237,76 +270,64 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64>
     sols
 }
 
-
-fn quadratic_residue_mod_pow_of_two(coefs: &Coefs, c: u32) -> Vec<i64>
-{
+fn quadratic_residue_mod_pow_of_two(coefs: &Coefs, c: u32) -> Vec<i64> {
     let n = i64::pow(coefs.n, c);
 
     match c {
-        1 => {
-            quadratic_residue_mod_two(&coefs)
-        },
-        2 => {
-            quadratic_residue_mod_four(&coefs, n)
-        },
+        1 => quadratic_residue_mod_two(&coefs),
+        2 => quadratic_residue_mod_four(&coefs, n),
         _ => {
             if euclid::gcd(n, coefs.a) == 1 {
                 quadratic_residue_mod_higher_power(&coefs, n, c)
             } else {
                 vec![]
             }
-        },
+        }
     }
 }
 
-
-fn quadratic_residue_mod_two(coefs: &Coefs) -> Vec<i64>
-{
+fn quadratic_residue_mod_two(coefs: &Coefs) -> Vec<i64> {
     match coefs.d & 1 {
         0 => {
             if coefs.a & 1 != 0 {
                 vec![0]
             } else {
-                vec![0,1]
+                vec![0, 1]
             }
-        },
+        }
         _ => {
             if coefs.a & 1 != 0 {
                 vec![1]
             } else {
                 vec![]
             }
-        },
+        }
     }
 }
 
-
-fn quadratic_residue_mod_four(coefs: &Coefs, n: i64) -> Vec<i64>
-{
+fn quadratic_residue_mod_four(coefs: &Coefs, n: i64) -> Vec<i64> {
     match coefs.d & 1 {
-        0 => {
-            match coefs.a % 4 {
-                0 => {
-                    if coefs.d % 4 == 0 {
-                        vec![0,1,2,3]
-                    } else {
-                        vec![]
-                    }
-                },
-                2 => {
-                    if coefs.d % 4 == 0 {
-                        vec![0,2]
-                    } else {
-                        vec![1,3]
-                    }
-                },
-                _ => {
-                    if coefs.d % 4 == 0 {
-                        vec![0,2]
-                    } else {
-                        vec![]
-                    }
-                },
+        0 => match coefs.a % 4 {
+            0 => {
+                if coefs.d % 4 == 0 {
+                    vec![0, 1, 2, 3]
+                } else {
+                    vec![]
+                }
+            }
+            2 => {
+                if coefs.d % 4 == 0 {
+                    vec![0, 2]
+                } else {
+                    vec![1, 3]
+                }
+            }
+            _ => {
+                if coefs.d % 4 == 0 {
+                    vec![0, 2]
+                } else {
+                    vec![]
+                }
             }
         },
         _ => {
@@ -314,7 +335,7 @@ fn quadratic_residue_mod_four(coefs: &Coefs, n: i64) -> Vec<i64>
                 let inv = euclid::multip_inverse(coefs.a, n);
                 let d = euclid::mod_mult_i64(inv, coefs.d, n);
                 if d % 4 == 1 {
-                    vec![1,3]
+                    vec![1, 3]
                 } else {
                     vec![]
                 }
@@ -325,9 +346,7 @@ fn quadratic_residue_mod_four(coefs: &Coefs, n: i64) -> Vec<i64>
     }
 }
 
-
-fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64>
-{
+fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64> {
     let inv = euclid::multip_inverse(coefs.a, n);
     let d = euclid::mod_mult_i64(inv, coefs.d, n);
 
@@ -335,7 +354,7 @@ fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64>
         1 => {
             let mut x: Vec<i64> = Vec::new();
             let sols: Vec<i64> = vec![1, 3];
-            
+
             for i in sols.into_iter() {
                 let mut s = i;
 
@@ -348,19 +367,17 @@ fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64>
                 x.push(n - s);
             }
             x
-        },
+        }
         4 => {
             vec![]
-        },
+        }
         _ => {
             vec![]
         }
     }
 }
 
-
-fn quadratic_mod_pow_of_two(coefs: &Coefs) -> Vec<i64>
-{
+fn quadratic_mod_pow_of_two(coefs: &Coefs) -> Vec<i64> {
     let mut sols: Vec<i64> = Vec::new();
 
     if coefs.d % 2 != 0 {
@@ -370,12 +387,16 @@ fn quadratic_mod_pow_of_two(coefs: &Coefs) -> Vec<i64>
         if coefs.a % 2 == 0 && coefs.b % 2 == 0 {
             return sols;
         }
-    } 
+    }
 
     let s_cand: Vec<i64> = vec![0, 1];
 
     for s in s_cand.into_iter() {
-        let f_lhs = euclid::mod_sum_i64(euclid::mod_mult_i64(coefs.a, s*s, coefs.n), coefs.b*s, coefs.n);
+        let f_lhs = euclid::mod_sum_i64(
+            euclid::mod_mult_i64(coefs.a, s * s, coefs.n),
+            coefs.b * s,
+            coefs.n,
+        );
         if f_lhs % coefs.n == coefs.d % coefs.n {
             sols.push(s);
         }
@@ -384,10 +405,10 @@ fn quadratic_mod_pow_of_two(coefs: &Coefs) -> Vec<i64>
     sols
 }
 
-
-fn lift_with_hensels_method(coefs: &Coefs, sub_sols: Vec<i64>, c: u32) -> Vec<i64>
-{
-    if c <= 1 {return sub_sols;}
+fn lift_with_hensels_method(coefs: &Coefs, sub_sols: Vec<i64>, c: u32) -> Vec<i64> {
+    if c <= 1 {
+        return sub_sols;
+    }
     let mut sols: Vec<i64> = Vec::new();
 
     for s in &sub_sols {
@@ -409,19 +430,22 @@ fn lift_with_hensels_method(coefs: &Coefs, sub_sols: Vec<i64>, c: u32) -> Vec<i6
             let bx = euclid::mod_mult_i64(coefs.b, lifted_s, n);
 
             let mut cx = -1 * coefs.d;
-            if cx < 0 {cx = add_until_nonnegative(cx, n);}
+            if cx < 0 {
+                cx = add_until_nonnegative(cx, n);
+            }
 
             let func = euclid::mod_sum_i64(euclid::mod_sum_i64(ax, bx, n), cx, n);
             let m = euclid::mod_mult_i64(func, t, n);
 
             lifted_s -= m;
-            if lifted_s < 0 {lifted_s = add_until_nonnegative(lifted_s, n);}
+            if lifted_s < 0 {
+                lifted_s = add_until_nonnegative(lifted_s, n);
+            }
         }
         sols.push(lifted_s);
     }
     sols
 }
-
 
 #[cfg(test)]
 mod tests {
@@ -431,8 +455,7 @@ mod tests {
     use std::iter::FromIterator;
 
     #[test]
-    fn test_linear_solver_small()
-    {
+    fn test_linear_solver_small() {
         let mut coefs = Coefs {
             a: 0,
             b: 2,
@@ -447,8 +470,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_small_no_solution()
-    {
+    fn test_linear_solver_small_no_solution() {
         let mut coefs = Coefs {
             a: 0,
             b: 2,
@@ -462,8 +484,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_small_second()
-    {
+    fn test_linear_solver_small_second() {
         let mut coefs = Coefs {
             a: 0,
             b: 21,
@@ -478,8 +499,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_small_with_neg_additive_part()
-    {
+    fn test_linear_solver_small_with_neg_additive_part() {
         let mut coefs = Coefs {
             a: 0,
             b: 21,
@@ -494,8 +514,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_small_with_pos_additive_part()
-    {
+    fn test_linear_solver_small_with_pos_additive_part() {
         let mut coefs = Coefs {
             a: 0,
             b: 199,
@@ -510,8 +529,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_small_with_non_coprime_pair_bn()
-    {
+    fn test_linear_solver_small_with_non_coprime_pair_bn() {
         let mut coefs = Coefs {
             a: 0,
             b: 5,
@@ -526,8 +544,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_small_with_non_coprime_pair_bn_and_neg_b()
-    {
+    fn test_linear_solver_small_with_non_coprime_pair_bn_and_neg_b() {
         let mut coefs = Coefs {
             a: 0,
             b: -55,
@@ -542,8 +559,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_large()
-    {
+    fn test_linear_solver_large() {
         let mut coefs = Coefs {
             a: 0,
             b: -9832503233,
@@ -558,8 +574,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_large_no_solution()
-    {
+    fn test_linear_solver_large_no_solution() {
         let mut coefs = Coefs {
             a: 0,
             b: -23850975512223,
@@ -573,8 +588,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_large_second()
-    {
+    fn test_linear_solver_large_second() {
         let mut coefs = Coefs {
             a: 0,
             b: -9832503233,
@@ -589,8 +603,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_large_third()
-    {
+    fn test_linear_solver_large_third() {
         let mut coefs = Coefs {
             a: 0,
             b: 2,
@@ -605,8 +618,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_large_with_additive_part()
-    {
+    fn test_linear_solver_large_with_additive_part() {
         let mut coefs = Coefs {
             a: 0,
             b: -55235,
@@ -621,8 +633,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_large_with_non_coprime_pair_bn()
-    {
+    fn test_linear_solver_large_with_non_coprime_pair_bn() {
         let mut coefs = Coefs {
             a: 0,
             b: 2,
@@ -637,8 +648,7 @@ mod tests {
     }
 
     #[test]
-    fn test_linear_solver_large_with_neg_b()
-    {
+    fn test_linear_solver_large_with_neg_b() {
         let mut coefs = Coefs {
             a: 0,
             b: -999999999997,
@@ -653,8 +663,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_small_prime_modulus()
-    {
+    fn test_quadratic_solver_small_prime_modulus() {
         let mut coefs = Coefs {
             a: 3,
             b: 6,
@@ -671,8 +680,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_small_prime_modulus_second()
-    {
+    fn test_quadratic_solver_small_prime_modulus_second() {
         let mut coefs = Coefs {
             a: 3,
             b: 6,
@@ -689,8 +697,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus()
-    {
+    fn test_quadratic_solver_prime_modulus() {
         let mut coefs = Coefs {
             a: 1,
             b: 1,
@@ -705,8 +712,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_second()
-    {
+    fn test_quadratic_solver_prime_modulus_second() {
         let mut coefs = Coefs {
             a: 1,
             b: 1,
@@ -723,8 +729,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_third()
-    {
+    fn test_quadratic_solver_prime_modulus_third() {
         let mut coefs = Coefs {
             a: 5,
             b: 71,
@@ -741,8 +746,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_fourth()
-    {
+    fn test_quadratic_solver_prime_modulus_fourth() {
         let mut coefs = Coefs {
             a: -9138,
             b: 51252,
@@ -759,8 +763,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_fifth()
-    {
+    fn test_quadratic_solver_prime_modulus_fifth() {
         let mut coefs = Coefs {
             a: 2,
             b: 8,
@@ -777,8 +780,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_double_root()
-    {
+    fn test_quadratic_solver_prime_modulus_double_root() {
         let mut coefs = Coefs {
             a: 3,
             b: -5,
@@ -793,8 +795,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_neg_coefs()
-    {
+    fn test_quadratic_solver_prime_modulus_neg_coefs() {
         let mut coefs = Coefs {
             a: -999999,
             b: -333333,
@@ -811,8 +812,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_large_prime_mod()
-    {
+    fn test_quadratic_solver_prime_modulus_large_prime_mod() {
         let mut coefs = Coefs {
             a: 12381221,
             b: -21212322,
@@ -829,8 +829,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_large_prime_mod_second()
-    {
+    fn test_quadratic_solver_prime_modulus_large_prime_mod_second() {
         let mut coefs = Coefs {
             a: 1212421490235,
             b: 91595920724124,
@@ -847,8 +846,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_large_prime_mod_third()
-    {
+    fn test_quadratic_solver_prime_modulus_large_prime_mod_third() {
         let mut coefs = Coefs {
             a: 1,
             b: 0,
@@ -865,8 +863,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_no_solution_first()
-    {
+    fn test_quadratic_solver_prime_modulus_no_solution_first() {
         let mut coefs = Coefs {
             a: 5,
             b: 1,
@@ -880,8 +877,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_no_solution_second()
-    {
+    fn test_quadratic_solver_prime_modulus_no_solution_second() {
         let mut coefs = Coefs {
             a: 1,
             b: 0,
@@ -895,8 +891,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_prime_modulus_no_solution_third()
-    {
+    fn test_quadratic_solver_prime_modulus_no_solution_third() {
         let mut coefs = Coefs {
             a: 1238122191,
             b: -212897922212924,
@@ -910,8 +905,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_two()
-    {
+    fn test_quadratic_solver_modulus_two() {
         let mut coefs = Coefs {
             a: 5,
             b: 1,
@@ -928,8 +922,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_two_second()
-    {
+    fn test_quadratic_solver_modulus_two_second() {
         let mut coefs = Coefs {
             a: 1,
             b: 1,
@@ -946,8 +939,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_two_third()
-    {
+    fn test_quadratic_solver_modulus_two_third() {
         let mut coefs = Coefs {
             a: 1,
             b: 0,
@@ -961,8 +953,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_two_no_solution()
-    {
+    fn test_quadratic_solver_modulus_two_no_solution() {
         let mut coefs = Coefs {
             a: 1,
             b: 1,
@@ -976,8 +967,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_two_no_solution_second()
-    {
+    fn test_quadratic_solver_modulus_two_no_solution_second() {
         let mut coefs = Coefs {
             a: 8,
             b: 0,
@@ -991,8 +981,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two()
-    {
+    fn test_quadratic_solver_modulus_power_of_two() {
         let mut coefs = Coefs {
             a: 7,
             b: 0,
@@ -1009,8 +998,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_second()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_second() {
         let mut coefs = Coefs {
             a: 1,
             b: 0,
@@ -1027,8 +1015,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_third()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_third() {
         let mut coefs = Coefs {
             a: 3,
             b: 0,
@@ -1045,8 +1032,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_fourth()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_fourth() {
         let mut coefs = Coefs {
             a: 8,
             b: 0,
@@ -1065,8 +1051,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_fifth()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_fifth() {
         let mut coefs = Coefs {
             a: 6,
             b: 0,
@@ -1083,8 +1068,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_sixth()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_sixth() {
         let mut coefs = Coefs {
             a: 6,
             b: 0,
@@ -1101,8 +1085,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_seventh()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_seventh() {
         let mut coefs = Coefs {
             a: 7,
             b: 0,
@@ -1121,8 +1104,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_eigth()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_eigth() {
         let mut coefs = Coefs {
             a: 1,
             b: 0,
@@ -1133,12 +1115,7 @@ mod tests {
         let res = solve_quadratic(&mut coefs);
         let res: HashSet<i64> = HashSet::from_iter(res);
 
-        let correct_res: Vec<i64> = vec![
-            34716455,
-            2112767193,
-            2182200103,
-            4260250841,
-        ];
+        let correct_res: Vec<i64> = vec![34716455, 2112767193, 2182200103, 4260250841];
 
         for r in &correct_res {
             assert!(res.contains(&*r));
@@ -1146,8 +1123,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_ninth()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_ninth() {
         let mut coefs = Coefs {
             a: 1,
             b: 0,
@@ -1171,8 +1147,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_two_tenth()
-    {
+    fn test_quadratic_solver_modulus_power_of_two_tenth() {
         let mut coefs = Coefs {
             a: 999999999999999999,
             b: 0,
@@ -1196,8 +1171,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_prime()
-    {
+    fn test_quadratic_solver_modulus_power_of_prime() {
         let mut coefs = Coefs {
             a: 1,
             b: 1,
@@ -1213,8 +1187,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_prime_second()
-    {
+    fn test_quadratic_solver_modulus_power_of_prime_second() {
         let mut coefs = Coefs {
             a: 999999999999999999,
             b: -999999999912421,
@@ -1230,8 +1203,7 @@ mod tests {
     }
 
     #[test]
-    fn test_quadratic_solver_modulus_power_of_prime_third()
-    {
+    fn test_quadratic_solver_modulus_power_of_prime_third() {
         let mut coefs = Coefs {
             a: -125125121242124,
             b: -54224212353523,
@@ -1245,6 +1217,4 @@ mod tests {
         assert!(res.contains(&1523832291260501430));
         assert!(res.contains(&2424331690299886142));
     }
-
-
 }

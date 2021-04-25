@@ -2,26 +2,25 @@ use std::env;
 use std::process;
 use std::vec::Vec;
 
-mod prime;
 mod euclid;
+mod prime;
 mod residue;
 mod solver;
 
 pub const MAX_COEF_VAL: i64 = i64::MAX - 1;
 pub const MIN_COEF_VAL: i64 = i64::MIN + 2;
 
-
 fn help() {
-    println!("usage:
+    println!(
+        "usage:
     quadsolver <a;integer> <b;integer> \
     <c;integer> <d;integer> <n;integer>
     Solve a quadratic congruence equation of the form \
-    ax^2 + bx + c = d (mod n).");
+    ax^2 + bx + c = d (mod n)."
+    );
 }
 
-
-fn main()
-{
+fn main() {
     let args: Vec<String> = env::args().collect();
 
     let equation = Equation::new(&args).unwrap_or_else(|err| {
@@ -34,7 +33,6 @@ fn main()
 
     solver::solve_equation(equation);
 }
-
 
 pub struct Coefs {
     pub a: i64,
@@ -50,81 +48,88 @@ pub enum Equation {
 }
 
 impl Equation {
-
     fn new(args: &[String]) -> Result<Equation, &str> {
         match args.len() {
-            1 => {
-                Err("No arguments provided to solve equation of the form \
-                ax^2 + bx + c = d (mod n)")
-            },
+            1 => Err("No arguments provided to solve equation of the form \
+                ax^2 + bx + c = d (mod n)"),
             2 => {
                 if &args[1] == "--help" {
                     help();
                     return Err("help");
                 }
-                Err("Not enough arguments provided to solve equation of the form \
-                ax^2 + bx + c = d (mod n)")
-            },
+                Err(
+                    "Not enough arguments provided to solve equation of the form \
+                ax^2 + bx + c = d (mod n)",
+                )
+            }
             6 => {
                 let mut coefs: Vec<i64> = Vec::new();
                 match Equation::parse_to_integers(&mut coefs, &args) {
                     Err(x) => Err(x),
-                    _ => {
-                        match Equation::coef_values_are_valid(&coefs) {
-                            Err(x) => Err(x),
-                            _ => {
-                                if coefs[0] == 0 {
-                                    Ok(Equation::Linear(Coefs {
-                                        a: coefs[0],
-                                        b: coefs[1],
-                                        c: coefs[2],
-                                        d: coefs[3],
-                                        n: coefs[4],
-                                    }))
-                                } else {
-                                    Ok(Equation::Quad(Coefs {
-                                        a: coefs[0],
-                                        b: coefs[1],
-                                        c: coefs[2],
-                                        d: coefs[3],
-                                        n: coefs[4],
-                                    }))
-                                }
-                            },
+                    _ => match Equation::coef_values_are_valid(&coefs) {
+                        Err(x) => Err(x),
+                        _ => {
+                            if coefs[0] == 0 {
+                                Ok(Equation::Linear(Coefs {
+                                    a: coefs[0],
+                                    b: coefs[1],
+                                    c: coefs[2],
+                                    d: coefs[3],
+                                    n: coefs[4],
+                                }))
+                            } else {
+                                Ok(Equation::Quad(Coefs {
+                                    a: coefs[0],
+                                    b: coefs[1],
+                                    c: coefs[2],
+                                    d: coefs[3],
+                                    n: coefs[4],
+                                }))
+                            }
                         }
                     },
                 }
-            },
-            _ => {
-                Err("Argument count mismatch in order to solve equation of the form \
-                ax^2 + bx + c = d (mod n)")
             }
+            _ => Err(
+                "Argument count mismatch in order to solve equation of the form \
+                ax^2 + bx + c = d (mod n)",
+            ),
         }
     }
 
-    fn parse_to_integers(coefs: &mut Vec<i64>, args: &[String]) -> Result<&'static str, &'static str> {
+    fn parse_to_integers(
+        coefs: &mut Vec<i64>,
+        args: &[String],
+    ) -> Result<&'static str, &'static str> {
         for (i, arg) in (&args[1..]).iter().enumerate() {
             let num: i64 = match (*arg).parse() {
                 Ok(x) => {
                     if i + 1 == args.len() - 1 {
-                        if x <= 1 {return Err("n must be larger than 1");}
+                        if x <= 1 {
+                            return Err("n must be larger than 1");
+                        }
                         if x > MAX_COEF_VAL {
                             println!("warning: n must be smaller than {}", MAX_COEF_VAL);
                             return Err("argument n not within bounds");
                         }
                     } else {
                         if x > MAX_COEF_VAL || x < MIN_COEF_VAL {
-                            println!("warning: {}th argument must lie within interval \
-                            [{}, {}]\n", i+1, MIN_COEF_VAL, MAX_COEF_VAL);
+                            println!(
+                                "warning: {}th argument must lie within interval \
+                            [{}, {}]\n",
+                                i + 1,
+                                MIN_COEF_VAL,
+                                MAX_COEF_VAL
+                            );
                             return Err("argument not within bounds");
                         }
                     }
                     x
-                },
+                }
                 Err(_) => {
-                    println!("warning: {}th argument not integer type\n", i+1);
+                    println!("warning: {}th argument not integer type\n", i + 1);
                     return Err("argument non-integer type");
-                },
+                }
             };
             coefs.push(num);
         }
@@ -146,5 +151,4 @@ impl Equation {
         }
         Ok("coefs valid")
     }
-
 }

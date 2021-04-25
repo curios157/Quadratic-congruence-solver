@@ -1,65 +1,83 @@
-use std::vec::Vec;
 use std::convert::TryInto;
+use std::vec::Vec;
 
 use crate::euclid;
 
 const PRIME_THRES: u64 = 10_000;
 
-
-pub fn is_prime(x: i64) -> bool
-{
+pub fn is_prime(x: i64) -> bool {
     let x: u64 = x.try_into().unwrap();
 
     if x < PRIME_THRES {
         is_prime_td(x)
     } else {
-        if cannot_be_prime_td(x) {false} else {is_prime_mr(x)}
+        if cannot_be_prime_td(x) {
+            false
+        } else {
+            is_prime_mr(x)
+        }
     }
 }
 
+fn is_prime_td(x: u64) -> bool {
+    if x < 2 {
+        return false;
+    }
+    if x >= 2 && x <= 3 {
+        return true;
+    }
 
-fn is_prime_td(x: u64) -> bool
-{
-    if x < 2 {return false;}
-    if x >= 2 && x <= 3 {return true;}
-
-    if x & 1 == 0 {return false;}
-    if x % 3 == 0 {return false;}
+    if x & 1 == 0 {
+        return false;
+    }
+    if x % 3 == 0 {
+        return false;
+    }
 
     let mut k = 6;
 
-    while k-1 <= x / (k-1) {
-        if x % (k-1) == 0 {return false;}
-        if x % (k+1) == 0 {return false;}
+    while k - 1 <= x / (k - 1) {
+        if x % (k - 1) == 0 {
+            return false;
+        }
+        if x % (k + 1) == 0 {
+            return false;
+        }
         k += 6;
     }
     true
 }
 
-
-fn cannot_be_prime_td(x: u64) -> bool
-{
+fn cannot_be_prime_td(x: u64) -> bool {
     // cannot evaluate small x
-    if x < 100 {return false;}
+    if x < 100 {
+        return false;
+    }
 
-    if x & 1 == 0 {return true;}
-    if x % 3 == 0 {return true;}
+    if x & 1 == 0 {
+        return true;
+    }
+    if x % 3 == 0 {
+        return true;
+    }
 
     // k must test up to the largest base value of MR's prime test
     let mut k = 6;
 
     while k < 100 {
-        if x % (k-1) == 0 {return true;}
-        if x % (k+1) == 0 {return true;}
+        if x % (k - 1) == 0 {
+            return true;
+        }
+        if x % (k + 1) == 0 {
+            return true;
+        }
         k += 6;
     }
     false
 }
 
-
-fn is_prime_mr(x: u64) -> bool
-{
-    let mut n = x-1;
+fn is_prime_mr(x: u64) -> bool {
+    let mut n = x - 1;
     let mut s = 0;
 
     while n & 1 == 0 {
@@ -68,29 +86,31 @@ fn is_prime_mr(x: u64) -> bool
     }
     let d = n;
 
-    let bases: [u64;7] = [2,325,9375,28178,450775,9780504,1795265022];
+    let bases: [u64; 7] = [2, 325, 9375, 28178, 450775, 9780504, 1795265022];
 
     for base in bases.iter() {
         let mut q: u64 = euclid::mod_exp_u64(*base, d, x);
-        if q == 1 || q == x-1 {continue;}
+        if q == 1 || q == x - 1 {
+            continue;
+        }
         let mut jump = false;
 
-        for _i in 0..s-1 {
+        for _i in 0..s - 1 {
             q = euclid::mod_mult_u64(q, q, x);
-            if q == x-1 {
+            if q == x - 1 {
                 jump = true;
                 break;
             }
         }
-        if jump == true {continue;}
+        if jump == true {
+            continue;
+        }
         return false;
     }
     true
 }
 
-
-pub fn factorize(mut n: u64, factors: &mut Vec<u64>)
-{
+pub fn factorize(mut n: u64, factors: &mut Vec<u64>) {
     while n & 1u64 == 0 {
         n >>= 1;
         factors.push(2);
@@ -108,10 +128,10 @@ pub fn factorize(mut n: u64, factors: &mut Vec<u64>)
         factors.push(7);
     }
 
-    let wheel_inc = [2,4,2,4,6,2,6,4,2,4,6,6,2,6,4,
-                     2,6,4,6,8,4,2,4,2,4,8,6,4,6,2,
-                     4,6,2,6,6,4,2,4,6,2,6,4,2,4,2,
-                     10,2,10];
+    let wheel_inc = [
+        2, 4, 2, 4, 6, 2, 6, 4, 2, 4, 6, 6, 2, 6, 4, 2, 6, 4, 6, 8, 4, 2, 4, 2, 4, 8, 6, 4, 6, 2,
+        4, 6, 2, 6, 6, 4, 2, 4, 6, 2, 6, 4, 2, 4, 2, 10, 2, 10,
+    ];
 
     let wheels = wheel_inc.len();
     let mut k: u64 = 11;
@@ -134,15 +154,13 @@ pub fn factorize(mut n: u64, factors: &mut Vec<u64>)
         factors.push(n);
     }
 }
-    
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_is_prime_td_for_primes()
-    {
+    fn test_is_prime_td_for_primes() {
         assert!(is_prime_td(2) == true);
         assert!(is_prime_td(11) == true);
         assert!(is_prime_td(1009) == true);
@@ -150,8 +168,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_prime_td_for_composite()
-    {
+    fn test_is_prime_td_for_composite() {
         assert!(is_prime_td(16) == false);
         assert!(is_prime_td(111) == false);
         assert!(is_prime_td(1729) == false);
@@ -159,8 +176,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cannot_be_prime_td_for_primes()
-    {
+    fn test_cannot_be_prime_td_for_primes() {
         assert!(cannot_be_prime_td(97) == false);
         assert!(cannot_be_prime_td(101) == false);
         assert!(cannot_be_prime_td(103) == false);
@@ -168,8 +184,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cannot_be_prime_td_for_composite()
-    {
+    fn test_cannot_be_prime_td_for_composite() {
         assert!(cannot_be_prime_td(1729) == true);
         assert!(cannot_be_prime_td(8321) == true);
         assert!(cannot_be_prime_td(31697) == true);
@@ -178,8 +193,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_prime_for_small_primes_mr()
-    {
+    fn test_is_prime_for_small_primes_mr() {
         assert!(is_prime_mr(1009) == true);
         assert!(is_prime_mr(1709) == true);
         assert!(is_prime_mr(99_991) == true);
@@ -187,16 +201,14 @@ mod tests {
     }
 
     #[test]
-    fn test_is_prime_for_mid_primes_mr()
-    {
+    fn test_is_prime_for_mid_primes_mr() {
         assert!(is_prime_mr(256_203_221) == true);
         assert!(is_prime_mr(633_910_099) == true);
         assert!(is_prime_mr(982_451_653) == true);
     }
 
     #[test]
-    fn test_is_prime_for_large_primes_mr()
-    {
+    fn test_is_prime_for_large_primes_mr() {
         assert!(is_prime_mr(4294967291) == true);
         assert!(is_prime_mr(50000038603) == true);
         assert!(is_prime_mr(9223372036854775337) == true);
@@ -204,8 +216,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_prime_for_composite_mr()
-    {
+    fn test_is_prime_for_composite_mr() {
         assert!(is_prime_mr(1729) == false);
         assert!(is_prime_mr(13021) == false);
         assert!(is_prime_mr(79381) == false);
@@ -217,8 +228,7 @@ mod tests {
     }
 
     #[test]
-    fn test_is_prime()
-    {
+    fn test_is_prime() {
         assert!(is_prime(17) == true);
         assert!(is_prime(10999) == false);
         assert!(is_prime(99991) == true);
@@ -231,12 +241,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_small_prime()
-    {
+    fn test_factorization_for_small_prime() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(2, &mut factors);
 
-        let c_factors: [u64;1] = [2];
+        let c_factors: [u64; 1] = [2];
         let mut i = 0;
 
         for f in &factors {
@@ -246,12 +255,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_small_prime2()
-    {
+    fn test_factorization_for_small_prime2() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(11, &mut factors);
 
-        let c_factors: [u64;1] = [11];
+        let c_factors: [u64; 1] = [11];
         let mut i = 0;
 
         for f in &factors {
@@ -261,12 +269,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_small_composite()
-    {
+    fn test_factorization_for_small_composite() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(250, &mut factors);
 
-        let c_factors: [u64;4] = [2,5,5,5];
+        let c_factors: [u64; 4] = [2, 5, 5, 5];
         let mut i = 0;
 
         for f in &factors {
@@ -276,12 +283,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_mid_prime()
-    {
+    fn test_factorization_for_mid_prime() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(2147483647, &mut factors);
 
-        let c_factors: [u64;1] = [2147483647];
+        let c_factors: [u64; 1] = [2147483647];
         let mut i = 0;
 
         for f in &factors {
@@ -291,12 +297,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_mid_composite()
-    {
+    fn test_factorization_for_mid_composite() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(534483647, &mut factors);
 
-        let c_factors: [u64;2] = [61, 8762027];
+        let c_factors: [u64; 2] = [61, 8762027];
         let mut i = 0;
 
         for f in &factors {
@@ -306,12 +311,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_large_prime()
-    {
+    fn test_factorization_for_large_prime() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(326326236253, &mut factors);
 
-        let c_factors: [u64;1] = [326326236253];
+        let c_factors: [u64; 1] = [326326236253];
         let mut i = 0;
 
         for f in &factors {
@@ -321,12 +325,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_large_composite()
-    {
+    fn test_factorization_for_large_composite() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(933720368547, &mut factors);
 
-        let c_factors: [u64;4] = [3,191,27191,59929];
+        let c_factors: [u64; 4] = [3, 191, 27191, 59929];
         let mut i = 0;
 
         for f in &factors {
@@ -336,12 +339,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_large_composite_second()
-    {
+    fn test_factorization_for_large_composite_second() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(111729968547, &mut factors);
 
-        let c_factors: [u64;5] = [3,17,109,1013,19841];
+        let c_factors: [u64; 5] = [3, 17, 109, 1013, 19841];
         let mut i = 0;
 
         for f in &factors {
@@ -351,12 +353,11 @@ mod tests {
     }
 
     #[test]
-    fn test_factorization_for_large_composite_third()
-    {
+    fn test_factorization_for_large_composite_third() {
         let mut factors: Vec<u64> = Vec::new();
         factorize(18446744073709551615, &mut factors);
 
-        let c_factors: [u64;7] = [3,5,17,257,641,65537,6700417];
+        let c_factors: [u64; 7] = [3, 5, 17, 257, 641, 65537, 6700417];
         let mut i = 0;
 
         for f in &factors {
@@ -364,5 +365,4 @@ mod tests {
             i += 1;
         }
     }
-
 }
