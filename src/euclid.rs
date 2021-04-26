@@ -293,7 +293,7 @@ mod tests {
     }
 
     #[test]
-    fn test_crt_small() {
+    fn test_crt_first() {
         let pairs: Vec<(i64, i64)> = vec![(3, 7), (4, 7), (1, 11), (10, 11)];
         let res = crt(pairs, 77);
 
@@ -307,7 +307,7 @@ mod tests {
     }
 
     #[test]
-    fn test_crt_small_second() {
+    fn test_crt_second() {
         let pairs: Vec<(i64, i64)> = vec![(0, 3), (0, 4), (2, 5), (3, 5)];
         let res = crt(pairs, 60);
 
@@ -319,7 +319,7 @@ mod tests {
     }
 
     #[test]
-    fn test_crt_mid() {
+    fn test_crt_third() {
         let pairs: Vec<(i64, i64)> = vec![(2, 9), (4, 9), (3, 5), (4, 5), (1, 7), (3, 7)];
         let res = crt(pairs, 315);
 
@@ -335,13 +335,4 @@ mod tests {
         assert!(res.contains(&274));
         assert!(res.contains(&94));
     }
-
-    #[test]
-    fn test_crt_large() {}
-
-    #[test]
-    fn test_crt_large_second() {}
-
-    #[test]
-    fn test_crt_large_third() {}
 }

@@ -355,6 +355,20 @@ mod tests {
     #[test]
     fn test_factorization_for_large_composite_third() {
         let mut factors: Vec<u64> = Vec::new();
+        factorize(614889782588491410, &mut factors);
+
+        let c_factors: [u64; 15] = [2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47];
+        let mut i = 0;
+
+        for f in &factors {
+            assert_eq!(*f, c_factors[i]);
+            i += 1;
+        }
+    }
+
+    #[test]
+    fn test_factorization_for_large_composite_fourth() {
+        let mut factors: Vec<u64> = Vec::new();
         factorize(18446744073709551615, &mut factors);
 
         let c_factors: [u64; 7] = [3, 5, 17, 257, 641, 65537, 6700417];

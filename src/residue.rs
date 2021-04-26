@@ -51,8 +51,6 @@ fn quadratic_residue_ts(x: u64, p: u64) -> (i64, u64) {
     let mut t = euclid::mod_exp_u64(x, q, p);
     let mut r = euclid::mod_exp_u64(x, (q + 1) / 2, p);
 
-    // residue.0 == -1 => no solution
-    // residue.0 == 1 => residue.1 is the quadratic residue
     let mut residue: (i64, u64) = (1, 0);
 
     loop {
