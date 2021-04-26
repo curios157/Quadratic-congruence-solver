@@ -110,6 +110,46 @@ fn is_prime_mr(x: u64) -> bool {
     true
 }
 
+fn safe_square_for_positive_num(x: u64) -> u64 {
+    if x < u64::MAX / x {
+        x * x
+    } else {
+        0
+    }
+}
+
+fn fermats_factorization(n: u64) -> (u64, u64) {
+    if n <= 1 || n & 1 == 0 {
+        return (0, 0);
+    }
+    let mut a: u64 = (n as f64).sqrt().ceil() as u64;
+
+    let mut a_sq = safe_square_for_positive_num(a);
+    if a_sq == 0 {
+        return (0, 0);
+    }
+    if a_sq == n {
+        return (a, a);
+    }
+
+    for _ in 1..5 {
+        let b_sq = a_sq - n; // always > 0
+        let b = (b_sq as f64).sqrt().floor() as u64;
+
+        if safe_square_for_positive_num(b) == b_sq {
+            return (a - b, a + b); // smaller first
+        } else {
+            a += 1;
+            a_sq = safe_square_for_positive_num(a);
+
+            if a_sq == 0 {
+                return (0, 0);
+            }
+        }
+    }
+    (0, 0)
+}
+
 pub fn factorize(mut n: u64, factors: &mut Vec<u64>) {
     while n & 1u64 == 0 {
         n >>= 1;
@@ -146,6 +186,13 @@ pub fn factorize(mut n: u64, factors: &mut Vec<u64>) {
             if i < wheels - 1 {
                 i += 1;
             } else {
+                let ferm_res = fermats_factorization(n);
+                if ferm_res.0 > 1 {
+                    factors.push(ferm_res.0);
+                    factors.push(ferm_res.1);
+                    n = 1;
+                    break;
+                }
                 i = 0;
             }
         }
@@ -378,5 +425,39 @@ mod tests {
             assert_eq!(*f, c_factors[i]);
             i += 1;
         }
+    }
+
+    #[test]
+    fn test_factorization_for_large_composite_sixth() {
+        let mut factors: Vec<u64> = Vec::new();
+        factorize(2342247720185763019, &mut factors);
+
+        let c_factors: [u64; 5] = [7, 29, 257, 6700417, 6700417];
+        let mut i = 0;
+
+        for f in &factors {
+            assert_eq!(*f, c_factors[i]);
+            i += 1;
+        }
+    }
+
+    #[test]
+    fn test_factorization_for_power_of_prime() {
+        let mut factors: Vec<u64> = Vec::new();
+        factorize(965211250482432409, &mut factors);
+
+        assert!(factors.len() == 2);
+        assert_eq!(factors[0], 982451653);
+        assert_eq!(factors[1], 982451653);
+    }
+
+    #[test]
+    fn test_factorization_for_power_of_prime_second() {
+        let mut factors: Vec<u64> = Vec::new();
+        factorize(4611686014132420609, &mut factors);
+
+        assert!(factors.len() == 2);
+        assert_eq!(factors[0], 2147483647);
+        assert_eq!(factors[1], 2147483647);
     }
 }

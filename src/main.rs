@@ -109,7 +109,7 @@ impl Equation {
                             return Err("n must be larger than 1");
                         }
                         if x > MAX_COEF_VAL {
-                            println!("warning: n must be smaller than {}", MAX_COEF_VAL);
+                            println!("warning: n must be smaller or equal than {}", MAX_COEF_VAL);
                             return Err("argument n not within bounds");
                         }
                     } else {
