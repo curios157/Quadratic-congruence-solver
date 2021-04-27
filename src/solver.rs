@@ -1,5 +1,7 @@
 use std::collections::HashMap;
+use std::collections::HashSet;
 use std::convert::TryInto;
+use std::iter::FromIterator;
 use std::vec::Vec;
 
 use crate::Coefs;
@@ -151,37 +153,10 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
         let c_u32: u32 = (*c).try_into().unwrap(); // c < 64
         let modulo = i64::pow(coefs.n, c_u32);
 
-        let vec_error: Vec<i64> = vec![-1];
         diff_factor_count += 1;
 
-        if coefs.n == 2 {
-            if coefs.b == 0 {
-                let s = quadratic_residue_mod_pow_of_two(&coefs, c_u32);
-                if s.len() == 0 {
-                    coefs.n = n_orig;
-                    return vec_error;
-                }
-
-                for j in s {
-                    sols.push((j, modulo));
-                }
-            } else {
-                let sub_sols = quadratic_mod_pow_of_two(&coefs);
-                if sub_sols.len() == 0 {
-                    coefs.n = n_orig;
-                    return vec_error;
-                }
-
-                let s = lift_with_hensels_method(&coefs, sub_sols, c_u32);
-                if s.len() == 0 {
-                    coefs.n = n_orig;
-                    return vec_error;
-                }
-
-                for j in s {
-                    sols.push((j, modulo));
-                }
-            }
+        let sub_sols = if coefs.n == 2 {
+            quadratic_eq_mod_two(&coefs, c_u32)
         } else {
             let l = euclid::mod_mult_i64(coefs.b, coefs.b, coefs.n);
             let r = euclid::mod_mult_i64(
@@ -192,22 +167,21 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
             let rhs = euclid::mod_sum_i64(l, r, coefs.n);
 
             let sub_sols = quadratic_eq(&coefs, rhs);
-
             for j in &sub_sols {
                 if *j == -1 {
                     coefs.n = n_orig;
-                    return vec_error;
+                    return vec![-1];
                 }
             }
-            let sub_sols = lift_with_hensels_method(&coefs, sub_sols, c_u32);
-            if sub_sols.len() == 0 {
-                coefs.n = n_orig;
-                return vec_error;
-            }
+            lift_with_hensels_method(&coefs, sub_sols, c_u32)
+        };
 
-            for j in sub_sols {
-                sols.push((j, modulo));
-            }
+        if sub_sols.len() == 0 {
+            coefs.n = n_orig;
+            return vec![-1];
+        }
+        for j in sub_sols {
+            sols.push((j, modulo));
         }
     }
     coefs.n = n_orig;
@@ -221,7 +195,6 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
         }
         x_t
     };
-
     x
 }
 
@@ -273,6 +246,64 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64> {
     sols.push(sol.1);
 
     sols
+}
+
+fn quadratic_eq_mod_two(coefs: &Coefs, c: u32) -> Vec<i64> {
+    match coefs.b {
+        0 => quadratic_residue_mod_pow_of_two(&coefs, c),
+        _ => {
+            if coefs.d % 2 != 0 {
+                if coefs.a % 2 != 0 && coefs.b % 2 != 0 {
+                    return vec![];
+                }
+                if coefs.a % 2 == 0 && coefs.b % 2 == 0 {
+                    return vec![];
+                }
+            }
+            let sub_sols = quadratic_mod_general_pow_of_two(&coefs);
+            if sub_sols.len() == 0 {
+                return sub_sols;
+            }
+            let t: u32 = euclid::largest_common_dividing_power_of_two((coefs.a, coefs.b), coefs.d);
+
+            let m_coefs = Coefs {
+                a: coefs.a >> t,
+                b: coefs.b >> t,
+                c: coefs.c,
+                d: coefs.d >> t,
+                n: coefs.n,
+            };
+            let m_c: u32 = c - t; // >= 0
+
+            let sub_sols = lift_with_hensels_method(&m_coefs, sub_sols, m_c);
+            if sub_sols.len() == 0 {
+                return sub_sols;
+            }
+
+            if t == 0 {
+                sub_sols
+            } else {
+                let modulo = i64::pow(coefs.n, c);
+                let mod_t = i64::pow(coefs.n, t);
+                let multiplier = i64::pow(coefs.n, m_c);
+
+                let mut sols = HashSet::new();
+
+                for x in &sub_sols {
+                    let mut r = 0;
+                    while r < mod_t {
+                        sols.insert(euclid::mod_sum_i64(
+                            *x,
+                            euclid::mod_mult_i64(r, multiplier, modulo),
+                            modulo,
+                        ));
+                        r += 1;
+                    }
+                }
+                Vec::from_iter(sols)
+            }
+        }
+    }
 }
 
 fn quadratic_residue_mod_pow_of_two(coefs: &Coefs, c: u32) -> Vec<i64> {
@@ -382,17 +413,8 @@ fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64>
     }
 }
 
-fn quadratic_mod_pow_of_two(coefs: &Coefs) -> Vec<i64> {
+fn quadratic_mod_general_pow_of_two(coefs: &Coefs) -> Vec<i64> {
     let mut sols: Vec<i64> = Vec::new();
-
-    if coefs.d % 2 != 0 {
-        if coefs.a % 2 != 0 && coefs.b % 2 != 0 {
-            return sols;
-        }
-        if coefs.a % 2 == 0 && coefs.b % 2 == 0 {
-            return sols;
-        }
-    }
 
     let s_cand: Vec<i64> = vec![0, 1];
 
@@ -406,7 +428,6 @@ fn quadratic_mod_pow_of_two(coefs: &Coefs) -> Vec<i64> {
             sols.push(s);
         }
     }
-
     sols
 }
 
@@ -455,9 +476,6 @@ fn lift_with_hensels_method(coefs: &Coefs, sub_sols: Vec<i64>, c: u32) -> Vec<i6
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    use std::collections::HashSet;
-    use std::iter::FromIterator;
 
     #[test]
     fn test_linear_solver_small() {
@@ -1222,6 +1240,38 @@ mod tests {
         for r in &correct_res {
             assert!(res.contains(&*r));
         }
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_special_even_case() {
+        let mut coefs = Coefs {
+            a: 4,
+            b: 4,
+            c: 24,
+            d: 0,
+            n: 32,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        let correct_res: Vec<i64> = vec![1, 6, 9, 14, 17, 22, 25, 30];
+
+        for r in &correct_res {
+            assert!(res.contains(&*r));
+        }
+    }
+
+    #[test]
+    fn test_quadratic_solver_modulus_power_of_two_special_even_case_second() {
+        let mut coefs = Coefs {
+            a: 64,
+            b: 64,
+            c: 0,
+            d: 0,
+            n: 256,
+        };
+        let res = solve_quadratic(&mut coefs);
+        assert_eq!(res.len(), 128);
     }
 
     #[test]

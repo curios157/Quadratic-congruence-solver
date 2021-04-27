@@ -132,6 +132,34 @@ pub fn multip_inverse(x: i64, n: i64) -> i64 {
     }
 }
 
+pub fn largest_common_dividing_power_of_two(p: (i64, i64), q: i64) -> u32 {
+    let (x, y) = p;
+
+    if x & 1 != 0 || y & 1 != 0 {
+        return 0;
+    }
+    if q & 1 != 0 {
+        return 0;
+    }
+    if x == 0 || y == 0 {
+        return 0;
+    }
+
+    let x: u64 = x.try_into().unwrap();
+    let y: u64 = y.try_into().unwrap();
+    let x_t: u32 = x.trailing_zeros();
+    let y_t: u32 = y.trailing_zeros();
+
+    let t_min: u32 = if q == 0 {
+        cmp::min(x_t, y_t)
+    } else {
+        let q: u64 = q.try_into().unwrap();
+        let q_t: u32 = q.trailing_zeros();
+        cmp::min(q_t, cmp::min(x_t, y_t))
+    };
+    t_min
+}
+
 fn find_start_indices_for_diff_modulos(x: &Vec<(i64, i64)>) -> (Vec<u32>, Vec<u32>) {
     let mut diff_mod_counts: Vec<u32> = Vec::new();
 

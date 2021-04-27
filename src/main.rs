@@ -127,7 +127,10 @@ impl Equation {
                     x
                 }
                 Err(_) => {
-                    println!("warning: {}th argument not integer type\n", i + 1);
+                    println!(
+                        "warning: {}th argument not convertable to 64 bit signed integer\n",
+                        i + 1
+                    );
                     return Err("argument non-integer type");
                 }
             };
