@@ -1,8 +1,6 @@
 [package]
 name = "quadratic_congruence_solver"
-version = "0.1.0"
-authors = ["elmo moilanen"]
-edition = "2018"
+version = "1.0.0"
 
 [profile.dev]
 opt-level = 0
