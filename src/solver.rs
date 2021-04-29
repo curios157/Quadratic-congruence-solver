@@ -318,38 +318,70 @@ fn quadratic_residue_mod_pow_of_two(coefs: &Coefs, c: u32) -> Vec<i64> {
             } else {
                 if coefs.a & 1 == 0 && coefs.d & 1 == 0 && coefs.a > 0 {
                     if coefs.a % n == 0 {
-                        return vec![];
+                        vec![]
+                    } else {
+                        quadratic_residue_even_terms_mod_higher_power(&coefs, n, c)
                     }
-                    let t: u32 =
-                        euclid::largest_common_dividing_power_of_two((coefs.a, 2), coefs.d);
-
-                    let m_c: u32 = c - t; // >= 0, t >= 1
-
-                    let modulo = i64::pow(coefs.n, c);
-                    let mod_t = i64::pow(coefs.n, t);
-                    let multiplier = i64::pow(coefs.n, m_c);
-
-                    let sub_sols: Vec<i64> = vec![0];
-                    let mut sols = HashSet::new();
-
-                    for x in &sub_sols {
-                        let mut r = 0;
-                        while r < mod_t {
-                            sols.insert(euclid::mod_sum_i64(
-                                *x,
-                                euclid::mod_mult_i64(r, multiplier, modulo),
-                                modulo,
-                            ));
-                            r += 1;
-                        }
-                    }
-                    Vec::from_iter(sols)
                 } else {
                     vec![]
                 }
             }
         }
     }
+}
+
+fn quadratic_residue_even_terms_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64> {
+    let t: u32 = euclid::largest_common_dividing_power_of_two((coefs.a % n, 2), coefs.d);
+    let m_c: u32 = c - t; // >= 0, t >= 1
+
+    let sub_sols: Vec<i64> = if coefs.d > 0 {
+        let m_coefs = Coefs {
+            a: coefs.a >> t,
+            b: coefs.b,
+            c: coefs.c,
+            d: coefs.d >> t,
+            n: coefs.n,
+        };
+        let n_c = i64::pow(coefs.n, m_c);
+
+        match m_c {
+            0 => vec![],
+            1 => quadratic_residue_mod_two(&m_coefs),
+            2 => quadratic_residue_mod_four(&m_coefs, n_c),
+            _ => {
+                if euclid::gcd(n_c, coefs.a) == 1 {
+                    quadratic_residue_mod_higher_power(&m_coefs, n_c, m_c)
+                } else {
+                    vec![]
+                }
+            }
+        }
+    } else {
+        vec![0]
+    };
+
+    if sub_sols.len() == 0 {
+        return sub_sols;
+    }
+
+    let modulo = i64::pow(coefs.n, c);
+    let mod_t = i64::pow(coefs.n, t);
+    let multiplier = i64::pow(coefs.n, m_c);
+
+    let mut sols = HashSet::new();
+
+    for x in &sub_sols {
+        let mut r = 0;
+        while r < mod_t {
+            sols.insert(euclid::mod_sum_i64(
+                *x,
+                euclid::mod_mult_i64(r, multiplier, modulo),
+                modulo,
+            ));
+            r += 1;
+        }
+    }
+    Vec::from_iter(sols)
 }
 
 fn quadratic_residue_mod_two(coefs: &Coefs) -> Vec<i64> {
@@ -416,6 +448,14 @@ fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64>
     let inv = euclid::multip_inverse(coefs.a, n);
     let d = euclid::mod_mult_i64(inv, coefs.d, n);
 
+    if d == 0 {
+        let mut sols: Vec<i64> = vec![0];
+        let t: u32 = (c as f64 / 2f64).ceil() as u32; // c < 64
+
+        sols.push(i64::pow(coefs.n, t));
+        return sols;
+    }
+
     match d % 8 {
         1 => {
             let mut x: Vec<i64> = Vec::new();
@@ -433,9 +473,6 @@ fn quadratic_residue_mod_higher_power(coefs: &Coefs, n: i64, c: u32) -> Vec<i64>
                 x.push(n - s);
             }
             x
-        }
-        4 => {
-            vec![]
         }
         _ => {
             vec![]
