@@ -4,5 +4,13 @@ version = "0.1.0"
 authors = ["elmo moilanen"]
 edition = "2018"
 
+[profile.dev]
+opt-level = 0
+
+[profile.test]
+opt-level = 3
+
+[profile.release]
+opt-level = 3
 
 [dependencies]
