@@ -7,6 +7,7 @@ opt-level = 0
 
 [profile.test]
 opt-level = 3
+overflow-checks = true
 
 [profile.release]
 opt-level = 3
