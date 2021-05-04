@@ -3,7 +3,7 @@
 A solver for quadratic congruence equations `ax^2 + bx + c = d (mod n)`. Coefficients must be passed as command line arguments in the illustrated order and for other coefs than the modulus n allowed value range is `[-2^63+2, 2^63-2]` and for n `[2, 2^63-2]`. Notice that when setting coef a to 0, the solver finds solutions to a linear equation. Solutions, if exist, are given as members of the ring `Z/nZ`. In most cases, the solver should be able to find all solutions for a solvable equation but there can be few cases where only a subset of the complete set of solutions is returned.
 
 ## Use ##
-Following examples use Rust's package manager Cargo to build and then run the binary file. If needed, one can separate these steps.
+Following examples use Rust's package manager Cargo to build and then run the binary file.
 
 When running the following command, please set numerical values instead of placeholders a etc. Two dashes separate Cargo's and binary arguments.
 ```Rust

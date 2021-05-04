@@ -1,6 +1,7 @@
 use std::cmp;
 use std::convert::TryFrom;
 use std::convert::TryInto;
+use std::mem;
 
 const GCD_THRES: i64 = 4_294_967_295;
 
@@ -30,9 +31,7 @@ fn gcd_bin(mut x: u64, mut y: u64) -> u64 {
     let gcd: u64 = loop {
         y >>= y.trailing_zeros();
         if x > y {
-            let t = y;
-            y = x;
-            x = t;
+            mem::swap(&mut y, &mut x);
         }
         y -= x;
         if y == 0 {
@@ -218,28 +217,28 @@ fn make_index_combinations(diff_mod_counts: Vec<u32>) -> Vec<Vec<u32>> {
     prods
 }
 
-pub fn crt(x: Vec<(i64, i64)>, n: i64) -> Vec<i64> {
+pub fn crt(pairs: Vec<(i64, i64)>, n: i64) -> Vec<i64> {
     let mut sols: Vec<i64> = Vec::new();
-    if x.len() == 0 {
+    if pairs.is_empty() {
         return sols;
     }
 
-    let (start_indices, diff_mod_counts) = find_start_indices_for_diff_modulos(&x);
+    let (start_indices, diff_mod_counts) = find_start_indices_for_diff_modulos(&pairs);
     let combinations = make_index_combinations(diff_mod_counts);
 
     for combi in combinations {
-        let mut s = 0;
+        let mut sum = 0;
 
         for (i, c) in combi.iter().enumerate() {
             let idx = usize::try_from(*c + start_indices[i]).unwrap();
 
-            let z = n / x[idx].1;
-            let inv = multip_inverse(z, x[idx].1);
-            let r = mod_mult_i64(mod_mult_i64(x[idx].0, z, n), inv, n);
+            let n_div = n / pairs[idx].1;
+            let inv = multip_inverse(n_div, pairs[idx].1);
+            let res = mod_mult_i64(mod_mult_i64(pairs[idx].0, n_div, n), inv, n);
 
-            s = mod_sum_i64(s, r, n);
+            sum = mod_sum_i64(sum, res, n);
         }
-        sols.push(s);
+        sols.push(sum);
     }
 
     sols

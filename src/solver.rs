@@ -176,7 +176,7 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
             lift_with_hensels_method(&coefs, sub_sols, c_u32)
         };
 
-        if sub_sols.len() == 0 {
+        if sub_sols.is_empty() {
             coefs.n = n_orig;
             return vec![-1];
         }
@@ -190,8 +190,8 @@ fn quadratic_eq_composite_mod(coefs: &mut Coefs, factor_map: HashMap<u64, i64>) 
         euclid::crt(sols, coefs.n)
     } else {
         let mut x_t: Vec<i64> = Vec::new();
-        for j in 0..sols.len() {
-            x_t.push(sols[j].0);
+        for j in &sols {
+            x_t.push((*j).0);
         }
         x_t
     };
@@ -216,9 +216,9 @@ fn quadratic_eq(coefs: &Coefs, rhs: i64) -> Vec<i64> {
 
     let mut lin_coefs = Coefs {
         a: 0,
-        b: b,
+        b,
         c: 0,
-        d: d,
+        d,
         n: coefs.n,
     };
 
@@ -261,7 +261,7 @@ fn quadratic_eq_mod_two(coefs: &Coefs, c: u32) -> Vec<i64> {
                 }
             }
             let sub_sols = quadratic_mod_general_pow_of_two(&coefs);
-            if sub_sols.len() == 0 {
+            if sub_sols.is_empty() {
                 return sub_sols;
             }
             let t: u32 = euclid::largest_common_dividing_power_of_two((coefs.a, coefs.b), coefs.d);
@@ -276,7 +276,7 @@ fn quadratic_eq_mod_two(coefs: &Coefs, c: u32) -> Vec<i64> {
             let m_c: u32 = c - t; // >= 0
 
             let sub_sols = lift_with_hensels_method(&m_coefs, sub_sols, m_c);
-            if sub_sols.len() == 0 {
+            if sub_sols.is_empty() {
                 return sub_sols;
             }
 
@@ -315,16 +315,14 @@ fn quadratic_residue_mod_pow_of_two(coefs: &Coefs, c: u32) -> Vec<i64> {
         _ => {
             if euclid::gcd(n, coefs.a) == 1 {
                 quadratic_residue_mod_higher_power(&coefs, n, c)
-            } else {
-                if coefs.a & 1 == 0 && coefs.d & 1 == 0 && coefs.a > 0 {
-                    if coefs.a % n == 0 {
-                        vec![]
-                    } else {
-                        quadratic_residue_even_terms_mod_higher_power(&coefs, n, c)
-                    }
-                } else {
+            } else if coefs.a & 1 == 0 && coefs.d & 1 == 0 && coefs.a > 0 {
+                if coefs.a % n == 0 {
                     vec![]
+                } else {
+                    quadratic_residue_even_terms_mod_higher_power(&coefs, n, c)
                 }
+            } else {
+                vec![]
             }
         }
     }
@@ -360,7 +358,7 @@ fn quadratic_residue_even_terms_mod_higher_power(coefs: &Coefs, n: i64, c: u32) 
         vec![0]
     };
 
-    if sub_sols.len() == 0 {
+    if sub_sols.is_empty() {
         return sub_sols;
     }
 
@@ -522,7 +520,7 @@ fn lift_with_hensels_method(coefs: &Coefs, sub_sols: Vec<i64>, c: u32) -> Vec<i6
             let ax = euclid::mod_mult_i64(coefs.a, euclid::mod_mult_i64(lifted_s, lifted_s, n), n);
             let bx = euclid::mod_mult_i64(coefs.b, lifted_s, n);
 
-            let mut cx = -1 * coefs.d;
+            let mut cx = -coefs.d;
             if cx < 0 {
                 cx = add_until_nonnegative(cx, n);
             }

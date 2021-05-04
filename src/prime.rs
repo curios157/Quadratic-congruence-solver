@@ -10,12 +10,10 @@ pub fn is_prime(x: i64) -> bool {
 
     if x < PRIME_THRES {
         is_prime_td(x)
+    } else if cannot_be_prime_td(x) {
+        false
     } else {
-        if cannot_be_prime_td(x) {
-            false
-        } else {
-            is_prime_mr(x)
-        }
+        is_prime_mr(x)
     }
 }
 
@@ -23,7 +21,7 @@ fn is_prime_td(x: u64) -> bool {
     if x < 2 {
         return false;
     }
-    if x >= 2 && x <= 3 {
+    if (2..=3).contains(&x) {
         return true;
     }
 
@@ -77,32 +75,32 @@ fn cannot_be_prime_td(x: u64) -> bool {
 }
 
 fn is_prime_mr(x: u64) -> bool {
-    let mut n = x - 1;
-    let mut s = 0;
+    let mut num = x - 1;
+    let mut pow = 0;
 
-    while n & 1 == 0 {
-        s += 1;
-        n >>= 1;
+    while num & 1 == 0 {
+        pow += 1;
+        num >>= 1;
     }
-    let d = n;
+    let num_odd = num;
 
     let bases: [u64; 7] = [2, 325, 9375, 28178, 450775, 9780504, 1795265022];
 
     for base in bases.iter() {
-        let mut q: u64 = euclid::mod_exp_u64(*base, d, x);
+        let mut q: u64 = euclid::mod_exp_u64(*base, num_odd, x);
         if q == 1 || q == x - 1 {
             continue;
         }
         let mut jump = false;
 
-        for _i in 0..s - 1 {
+        for _i in 0..pow - 1 {
             q = euclid::mod_mult_u64(q, q, x);
             if q == x - 1 {
                 jump = true;
                 break;
             }
         }
-        if jump == true {
+        if jump {
             continue;
         }
         return false;

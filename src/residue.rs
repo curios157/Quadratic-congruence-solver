@@ -13,7 +13,8 @@ pub fn quadratic_residue(a: i64, p: i64) -> i64 {
     if result_tuple.0 == -1 {
         return -1;
     }
-    return (result_tuple.1).try_into().unwrap();
+
+    (result_tuple.1).try_into().unwrap()
 }
 
 fn first_quadratic_nonresidue(p: u64) -> u64 {

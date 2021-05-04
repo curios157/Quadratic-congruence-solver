@@ -112,17 +112,15 @@ impl Equation {
                             println!("warning: n must be smaller or equal than {}", MAX_COEF_VAL);
                             return Err("argument n not within bounds");
                         }
-                    } else {
-                        if x > MAX_COEF_VAL || x < MIN_COEF_VAL {
-                            println!(
-                                "warning: {}th argument must lie within interval \
+                    } else if x > MAX_COEF_VAL || x < MIN_COEF_VAL {
+                        println!(
+                            "warning: {}th argument must lie within interval \
                             [{}, {}]\n",
-                                i + 1,
-                                MIN_COEF_VAL,
-                                MAX_COEF_VAL
-                            );
-                            return Err("argument not within bounds");
-                        }
+                            i + 1,
+                            MIN_COEF_VAL,
+                            MAX_COEF_VAL
+                        );
+                        return Err("argument not within bounds");
                     }
                     x
                 }
