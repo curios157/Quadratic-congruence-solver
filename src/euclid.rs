@@ -1,7 +1,5 @@
-use std::cmp;
-use std::convert::TryFrom;
-use std::convert::TryInto;
-use std::mem;
+use std::convert::{TryFrom, TryInto};
+use std::{cmp, mem};
 
 const GCD_THRES: i64 = 4_294_967_295;
 

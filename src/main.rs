@@ -1,6 +1,5 @@
-use std::env;
-use std::process;
 use std::vec::Vec;
+use std::{env, process};
 
 mod euclid;
 mod prime;
