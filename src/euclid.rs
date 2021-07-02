@@ -157,7 +157,7 @@ pub fn largest_common_dividing_power_of_two(p: (i64, i64), q: i64) -> u32 {
     t_min
 }
 
-fn find_start_indices_for_diff_modulos(x: &Vec<(i64, i64)>) -> (Vec<u32>, Vec<u32>) {
+fn find_start_indices_for_diff_modulos(x: &[(i64, i64)]) -> (Vec<u32>, Vec<u32>) {
     let mut diff_mod_counts: Vec<u32> = Vec::new();
 
     let mut curr_mod = x[0].1;
@@ -182,12 +182,7 @@ fn find_start_indices_for_diff_modulos(x: &Vec<(i64, i64)>) -> (Vec<u32>, Vec<u3
     (start_indices, diff_mod_counts)
 }
 
-fn cartesian_product(
-    prods: &mut Vec<Vec<u32>>,
-    stack: &mut Vec<u32>,
-    idx: &Vec<Vec<u32>>,
-    i: usize,
-) {
+fn cartesian_product(prods: &mut Vec<Vec<u32>>, stack: &mut Vec<u32>, idx: &[Vec<u32>], i: usize) {
     for j in &idx[i] {
         stack.push(*j);
 

@@ -116,7 +116,7 @@ impl Equation {
         Ok("parsing ok")
     }
 
-    fn coef_values_are_valid(coefs: &Vec<i64>) -> Result<&'static str, &'static str> {
+    fn coef_values_are_valid(coefs: &[i64]) -> Result<&'static str, &'static str> {
         if coefs[0] == 0 && coefs[1] == 0 {
             return Err("both `a` and `b` cannot be simultaneously zero");
         }
