@@ -1387,6 +1387,22 @@ mod tests {
     }
 
     #[test]
+    fn test_quadratic_solver_modulus_power_of_prime_fourth() {
+        let mut coefs = Coefs {
+            a: -1,
+            b: 1,
+            c: -1,
+            d: 0,
+            n: 4611686014132420609,
+        };
+        let res = solve_quadratic(&mut coefs);
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.contains(&581405252161832858));
+        assert!(res.contains(&4030280761970587752));
+    }
+
+    #[test]
     fn test_quadratic_solver_composite_modulus() {
         let mut coefs = Coefs {
             a: 1,
