@@ -1554,4 +1554,24 @@ mod tests {
         assert!(res.len() == 1);
         assert_eq!(res[0], 614889782588491409);
     }
+
+    #[test]
+    fn test_quadratic_solver_composite_modulus_eight() {
+        let mut coefs = Coefs {
+            a: 3,
+            b: 7,
+            c: -9,
+            d: 1,
+            n: 1729,
+        };
+        let res = solve_quadratic(&mut coefs);
+        assert!(res.len() == 4);
+
+        let res: HashSet<i64> = HashSet::from_iter(res);
+
+        assert!(res.contains(&1));
+        assert!(res.contains(&573));
+        assert!(res.contains(&820));
+        assert!(res.contains(&1483));
+    }
 }
