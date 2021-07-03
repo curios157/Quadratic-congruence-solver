@@ -1,6 +1,6 @@
 # Quadratic congruence equation solver
 
-A solver for quadratic congruence equations `ax^2 + bx + c = d (mod n)`. Coefficients must be passed as command line arguments in the illustrated order and for other coefs than the modulus n allowed value range is `[-2^63+2, 2^63-2]` and for n `[2, 2^63-2]`. Notice that when setting the coefficient a to 0, the solver finds solutions to a linear equation. Solutions, if exist, are given as members of the ring `Z/nZ`. In most cases, the solver should be able to find all solutions for a solvable equation but there can be few cases where only a subset of the complete set of solutions is returned.
+A solver for quadratic congruence equations `ax^2 + bx + c = d (mod n)`. Coefficients must be passed as command line arguments in the illustrated order and for other coefs than the modulus n allowed value range is `[-2^63+2, 2^63-2]` and for n `[2, 2^63-2]`. Notice that when setting coefficient a to 0, the solver finds solutions to a linear equation instead of quadratic. Solutions, if exist, are given as members of ring `Z/nZ`. In most cases, the solver should be able to find all solutions for a solvable equation but there can be few cases where only a subset of the complete set of solutions is returned.
 
 ## Use ##
 Following examples use Rust's package manager Cargo to build and then run the binary file. Building takes place only when running for the first time or if the code has been modified since the last usage. Optionally, one may separately run the build command with Cargo or rustc and subsequently execute directly the binary without Cargo.
@@ -23,7 +23,7 @@ For example, in order to solve an equation of the form `3x^2 + 7x - 9 = 1 (mod 1
 ```Bash
 cargo run --release -- 3 7 -9 1 1729
 ```
-and as a result the solver will return all four solutions 1, 573, 820 and 1483 that belong to the ring Z/1729Z.
+and as a result the solver will return all four solutions 1, 573, 820 and 1483 that belong to ring Z/1729Z.
 
 Another, perhaps slightly more serious problem `-x^2 + x - 1 = 0 (mod 2147483647^2)` can be solved similarly
 ```Bash
