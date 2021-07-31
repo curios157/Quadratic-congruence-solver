@@ -15,7 +15,7 @@ fn main() {
         if err == "help" {
             process::exit(0);
         }
-        println!("Error when parsing command line arguments: {}", err);
+        eprintln!("Error when parsing command line arguments: {}", err);
         process::exit(1);
     });
 

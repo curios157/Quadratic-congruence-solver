@@ -88,11 +88,11 @@ impl Equation {
                             return Err("n must be larger than 1");
                         }
                         if x > MAX_COEF_VAL {
-                            println!("warning: n must be smaller or equal than {}", MAX_COEF_VAL);
+                            eprintln!("warning: n must be smaller or equal than {}", MAX_COEF_VAL);
                             return Err("argument n not within bounds");
                         }
                     } else if x > MAX_COEF_VAL || x < MIN_COEF_VAL {
-                        println!(
+                        eprintln!(
                             "warning: {}th argument must lie within interval \
                             [{}, {}]\n",
                             i + 1,
@@ -104,7 +104,7 @@ impl Equation {
                     x
                 }
                 Err(_) => {
-                    println!(
+                    eprintln!(
                         "warning: {}th argument not convertable to 64 bit signed integer\n",
                         i + 1
                     );
