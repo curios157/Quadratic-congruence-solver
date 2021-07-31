@@ -33,9 +33,6 @@ cargo run --release -- -1 1 -1 0 $((2147483647 ** 2))
 ```
 and it would return two different solutions.
 
-## Test ##
+## License ##
 
-Run all, approx. one hundred, unit tests by
-```Bash
-cargo test
-```
+This program is licensed under the [GPLv3](https://github.com/elmomoilanen/Quadratic-congruence-solver/blob/main/LICENSE).
