@@ -5,11 +5,11 @@ pub const MIN_COEF_VAL: i64 = i64::MIN + 2;
 
 fn help() {
     println!(
-        "usage:
-    quadsolver <a;integer> <b;integer> \
-    <c;integer> <d;integer> <n;integer>
+        "\nusage:
     Solve a quadratic congruence equation of the form \
-    ax^2 + bx + c = d (mod n)."
+    ax^2 + bx + c = d (mod n).
+    quadratic_congruence_solver <a;integer> <b;integer> \
+    <c;integer> <d;integer> <n;integer>"
     );
 }
 
