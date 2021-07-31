@@ -1,5 +1,7 @@
 # Quadratic congruence equation solver
 
+[![main](https://github.com/elmomoilanen/Quadratic-congruence-solver/actions/workflows/main.yml/badge.svg)](https://github.com/elmomoilanen/Quadratic-congruence-solver/actions/workflows/main.yml)
+
 A solver for quadratic congruence equations `ax^2 + bx + c = d (mod n)`. Coefficients of the equation must be passed as command line arguments in the illustrated order. Allowed value range for modulus `n` is `[2, 2^63-2]` and for the others `[-2^63+2, 2^63-2]`. Notice that when setting the coefficient `a` to zero, the solver finds solutions to a linear equation instead of quadratic. Other interesting subcase, namely an equation to determine whether `d` is a quadratic residue, occurs if `a` is set equal to one and coefs `b` and `c` to zero. Solutions, if exist, are given as members of ring `Z/nZ`. In most cases, the solver should be able to find all solutions for a solvable equation but there can be few cases where only a subset of the complete set of solutions is returned.
 
 ## Use ##
