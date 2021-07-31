@@ -1,7 +1,12 @@
 [package]
 name = "quadratic_congruence_solver"
+authors = ["Elmo Moilanen"]
 description = "Solver for quadratic and linear congruence equations."
 keywords = ["modular-arithmetic", "congruence", "linear-equations", "quadratic-equations"]
+categories = ["Mathematics"]
+repository = "https://github.com/elmomoilanen/Quadratic-congruence-solver"
+edition = "2018"
+readme = "README.md"
 license = "GPL-3.0"
 version = "1.2.0"
 
