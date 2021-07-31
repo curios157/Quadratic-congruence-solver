@@ -1,5 +1,6 @@
 //! Main functionality for solving congruence equations.
 //!
+use std::cmp::Ordering;
 use std::collections::{HashMap, HashSet};
 use std::convert::TryInto;
 use std::iter::FromIterator;
@@ -17,12 +18,12 @@ pub fn solve_equation(equation: Equation) {
         Equation::Linear(mut coefs) => {
             let sol = solve_linear(&mut coefs);
 
-            if sol.0 < 0 {
-                println!("There is no solution in Z/{}Z", coefs.n);
-            } else if sol.0 > 0 {
-                println!("All solutions: {} + {}k (mod {})", sol.1, sol.0, coefs.n);
-            } else {
-                println!("All solutions: {} + {}k", sol.1, coefs.n);
+            match (sol.0).cmp(&0) {
+                Ordering::Less => println!("There is no solution in Z/{}Z", coefs.n),
+                Ordering::Greater => {
+                    println!("All solutions: {} + {}k (mod {})", sol.1, sol.0, coefs.n)
+                }
+                Ordering::Equal => println!("All solutions: {} + {}k", sol.1, coefs.n),
             }
         }
         Equation::Quad(mut coefs) => {
