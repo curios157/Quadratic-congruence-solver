@@ -1,3 +1,5 @@
+//! Check whether a number is a quadratic residue.
+//!
 use std::convert::TryInto;
 
 use crate::euclid;

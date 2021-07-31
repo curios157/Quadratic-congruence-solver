@@ -1,3 +1,6 @@
+//! Parses command line arguments and forms the equation,
+//! either quadratic or linear, that is to be solved.
+//!
 use std::vec::Vec;
 
 pub const MAX_COEF_VAL: i64 = i64::MAX - 1;

@@ -1,3 +1,5 @@
+//! Detect primality and factorize composite numbers.
+//!
 use std::convert::TryInto;
 use std::vec::Vec;
 

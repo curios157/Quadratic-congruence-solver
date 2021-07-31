@@ -1,3 +1,6 @@
+//! Functionality for greatest common divisor, modular arithmetic
+//! and usage of the Chinese remainder theorem.
+//!
 use std::convert::{TryFrom, TryInto};
 use std::{cmp, mem};
 
